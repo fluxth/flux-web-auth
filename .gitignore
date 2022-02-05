@@ -1,0 +1,5 @@
+/target
+
+/static
+webpack/node_modules
+webpack/yarn-error.log
