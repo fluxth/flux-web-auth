@@ -10,6 +10,9 @@ use rocket_dyn_templates::Template;
 fn rocket() -> _ {
     rocket::build()
         .attach(Template::fairing())
-        .mount("/", routes![views::root, views::login])
+        .mount(
+            "/",
+            routes![views::root, views::login, views::login_process],
+        )
         .mount("/static", FileServer::from(relative!("static")))
 }
