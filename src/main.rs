@@ -14,5 +14,5 @@ fn rocket() -> _ {
             "/",
             routes![views::root, views::login, views::login_process],
         )
-        .mount("/static", FileServer::from(relative!("static")))
+        .mount("/static", FileServer::from("./static"))
 }

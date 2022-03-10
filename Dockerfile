@@ -8,15 +8,14 @@ RUN cd webpack && \
     NODE_ENV=production yarn build
 
 # Phase 2: Build server binary
-FROM rust:1.58 AS rust-build
+FROM rust:1.59.0 AS rust-build
 WORKDIR /usr/app/src
 
 RUN rustup target add x86_64-unknown-linux-musl
 
 COPY . .
 RUN cargo fetch --target x86_64-unknown-linux-musl
-RUN cargo build --target x86_64-unknown-linux-musl --release && \
-    cargo install --target x86_64-unknown-linux-musl && \
+RUN cargo install --target x86_64-unknown-linux-musl --path . && \
     strip /usr/local/cargo/bin/flux-web-auth
 
 # Phase 3: Runtime
