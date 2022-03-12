@@ -27,28 +27,27 @@ pub fn validate_next_url(next: &str) -> anyhow::Result<Url> {
 }
 
 pub fn generate_jwt(private_key: &[u8], username: &str) -> Result<String> {
+    use serde_json::json;
     let private_key = openssl::ec::EcKey::private_key_from_pem(private_key)?;
     let key = PKeyWithDigest {
         key: PKey::from_ec_key(private_key)?,
         digest: MessageDigest::sha384(),
     };
 
-    let mut claims = BTreeMap::new();
-
-    claims.insert("iss", "fluxauth");
-    claims.insert("sub", username);
-
     let now = chrono::Utc::now();
-    let now_unix = now.timestamp().to_string();
-    claims.insert("nbf", &now_unix);
-    claims.insert("iat", &now_unix);
-
+    let now_unix = now.timestamp();
     let expiry_unix = now
         .checked_add_signed(chrono::Duration::days(7))
         .ok_or(format_err!("Cannot add expiry time"))?
-        .timestamp()
-        .to_string();
-    claims.insert("exp", &expiry_unix);
+        .timestamp();
+
+    let claims = json!({
+        "iss": "fluxauth",
+        "sub": username,
+        "nbf": now_unix,
+        "iat": now_unix,
+        "exp": expiry_unix,
+    });
 
     Ok(claims.sign_with_key(&key)?)
 }
