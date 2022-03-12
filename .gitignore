@@ -1,6 +1,6 @@
 .DS_Store
 /target
-
 /static
+/temp
 webpack/node_modules
 webpack/yarn-error.log
