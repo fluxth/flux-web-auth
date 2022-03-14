@@ -12,10 +12,13 @@ FROM ekidd/rust-musl-builder:stable AS rust-build
 WORKDIR /usr/app/src
 
 RUN rustup target add x86_64-unknown-linux-musl
-
-COPY . .
-
 USER root
+
+COPY Cargo.toml Cargo.lock ./
+RUN mkdir .cargo && \
+    cargo vendor > .cargo/config
+
+COPY ./src src
 RUN cargo install --target x86_64-unknown-linux-musl --path . --root /usr/local/cargo && \
     strip /usr/local/cargo/bin/flux-web-auth
 
