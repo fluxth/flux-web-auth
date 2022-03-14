@@ -1,3 +1,4 @@
+mod catchers;
 mod utils;
 mod views;
 
@@ -34,6 +35,7 @@ fn rocket() -> _ {
     rocket
         .attach(Template::fairing())
         .manage(config)
+        .register("/", catchers![catchers::not_found])
         .mount(
             "/",
             routes![views::get_login, views::post_login, views::get_logout],
