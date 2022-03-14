@@ -34,7 +34,7 @@ pub fn get_login(
 
             // Render login form
             Ok(LoginResponse::Template(Template::render(
-                "login",
+                "pages/login",
                 LoginContext {
                     next_host: url.host_str(),
                     error: None,
@@ -73,7 +73,7 @@ pub fn post_login(
                     Ok(token) => token,
                     Err(_) => {
                         return Ok(LoginProcessResponse::Template(Template::render(
-                            "login",
+                            "pages/login",
                             LoginContext {
                                 next_host: url.host_str(),
                                 error: Some("Auth token generation failed"),
