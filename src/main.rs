@@ -34,6 +34,9 @@ fn rocket() -> _ {
     rocket
         .attach(Template::fairing())
         .manage(config)
-        .mount("/", routes![views::get_login, views::post_login])
+        .mount(
+            "/",
+            routes![views::get_login, views::post_login, views::get_logout],
+        )
         .mount("/static", FileServer::from("./static"))
 }
