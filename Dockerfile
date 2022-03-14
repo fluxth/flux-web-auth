@@ -23,9 +23,10 @@ RUN cargo install --target x86_64-unknown-linux-musl --path . --root /usr/local/
 FROM scratch AS runtime
 WORKDIR /usr/app/run
 
-COPY templates ./templates
 COPY --from=webpack-build /usr/app/src/static ./static
 COPY --from=rust-build /usr/local/cargo/bin/flux-web-auth .
+COPY templates ./templates
+COPY Rocket.toml .
 
 EXPOSE 8000
 CMD ["./flux-web-auth"]
