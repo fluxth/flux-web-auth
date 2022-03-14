@@ -43,7 +43,7 @@ pub fn get_login(
         }
 
         // Invalid host
-        Err(_) => Err(Template::render("errors/denied", json!({}))),
+        Err(_) => Err(Template::render("errors/host_denied", json!({}))),
     }
 }
 
@@ -99,7 +99,7 @@ pub fn post_login(
         }
 
         // Invalid host
-        Err(_) => Err(Template::render("errors/denied", json!({}))),
+        Err(_) => Err(Template::render("errors/host_denied", json!({}))),
     }
 }
 
