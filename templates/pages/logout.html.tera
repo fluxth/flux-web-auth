@@ -1,6 +1,6 @@
 {% extends "base/global" %}
 
-{% block title %}Sign out{% endblock %}
+{% block title %}Sign out - flux.ci{% endblock %}
 
 {% block content %}
 <div class="modal-header p-5 border-bottom-0 d-block text-success">

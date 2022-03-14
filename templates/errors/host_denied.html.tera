@@ -1,6 +1,6 @@
 {% extends "base/global" %}
 
-{% block title %}Access Denied{% endblock %}
+{% block title %}Access Denied - flux.ci{% endblock %}
 
 {% block content %}
 <div class="modal-header p-5 border-bottom-0 d-block text-danger">
