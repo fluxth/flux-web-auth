@@ -21,7 +21,11 @@ pub fn get_logout(
         }
     };
 
-    cookies.remove(Cookie::named(crate::AUTHTOKEN_COOKIE_NAME));
+    cookies.remove(
+        Cookie::build(crate::AUTHTOKEN_COOKIE_NAME, "")
+            .domain(crate::AUTHTOKEN_COOKIE_DOMAIN)
+            .finish(),
+    );
 
     Ok(Template::render(
         "pages/logout",
