@@ -20,13 +20,13 @@ module.exports = {
     main: "./src",
   },
   output: {
-    filename: "js/fluxauth-[name].min.js",
+    filename: "js/fluxauth-[name].js",
     path: directories.dist,
     uniqueName: "fluxauth",
   },
   plugins: [
     new MiniCssExtractPlugin({
-      filename: "css/fluxauth-[name].min.css",
+      filename: "css/fluxauth-[name].css",
     }),
     new CopyWebpackPlugin({
       patterns: [
