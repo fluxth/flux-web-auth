@@ -12,6 +12,7 @@ use serde::Deserialize;
 pub struct Config {
     jwt_private_key: String,
     jwt_public_key: String,
+    allowed_next_hosts: Vec<String>,
 }
 
 const AUTHTOKEN_COOKIE_DOMAIN: &'static str = "flux.ci";

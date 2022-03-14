@@ -1,4 +1,5 @@
 use anyhow::{bail, format_err, Result};
+use rocket::State;
 use url::Url;
 
 use jwt::{PKeyWithDigest, SignWithKey, VerifyWithKey};
@@ -6,7 +7,7 @@ use openssl::hash::MessageDigest;
 use openssl::pkey::PKey;
 use std::collections::BTreeMap;
 
-pub fn validate_next_url(next: &str) -> anyhow::Result<Url> {
+pub fn validate_next_url(next: &str, config: &State<crate::Config>) -> anyhow::Result<Url> {
     if next.len() == 0 {
         bail!("`next` parameter is required");
     }
@@ -18,8 +19,14 @@ pub fn validate_next_url(next: &str) -> anyhow::Result<Url> {
     }
 
     let host = url.host_str().ok_or(format_err!("hostname is required"))?;
+    let allowed_hosts = &config.allowed_next_hosts;
 
-    if host == "search.flux.ci" {
+    // FIXME: this allows every port coming `allowed_hosts`, tighten this later.
+    if allowed_hosts
+        .into_iter()
+        .find(|entry| *entry == host)
+        .is_some()
+    {
         Ok(url)
     } else {
         Err(format_err!("hostname not allowed"))

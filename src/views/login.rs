@@ -25,7 +25,7 @@ pub fn get_login(
     cookies: &CookieJar<'_>,
     next: String,
 ) -> Result<LoginResponse, Template> {
-    match validate_next_url(&next) {
+    match validate_next_url(&next, &config) {
         Ok(url) => {
             // Check existing session
             if has_active_session(cookies, config.jwt_public_key.as_bytes()) {
@@ -59,7 +59,7 @@ pub fn post_login(
     cookies: &CookieJar<'_>,
     next: String,
 ) -> Result<LoginProcessResponse, Template> {
-    match validate_next_url(&next) {
+    match validate_next_url(&next, &config) {
         Ok(url) => {
             // Check existing session
             if has_active_session(cookies, config.jwt_public_key.as_bytes()) {
