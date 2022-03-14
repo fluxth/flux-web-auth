@@ -1,2 +1,9 @@
 [default]
 template_dir = "templates"
+
+[release]
+address = "0.0.0.0"
+port = 8000
+ident = false
+cli_colors = false
+ctrlc = false
