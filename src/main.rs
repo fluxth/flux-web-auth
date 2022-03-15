@@ -16,7 +16,16 @@ pub struct Config {
     allowed_next_hosts: Vec<String>,
 }
 
+#[cfg(debug_assertions)]
+const DEFAULT_SCHEME: &'static str = "http";
+#[cfg(not(debug_assertions))]
+const DEFAULT_SCHEME: &'static str = "https";
+
+#[cfg(debug_assertions)]
+const AUTHTOKEN_COOKIE_DOMAIN: &'static str = "localhost";
+#[cfg(not(debug_assertions))]
 const AUTHTOKEN_COOKIE_DOMAIN: &'static str = "flux.ci";
+
 const AUTHTOKEN_COOKIE_NAME: &'static str = "authtoken";
 
 #[launch]

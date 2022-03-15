@@ -14,6 +14,8 @@ pub fn validate_next_url(next: &str, config: &State<crate::Config>) -> anyhow::R
 
     let url = Url::parse(next)?;
 
+    // Only activate scheme check in release mode
+    #[cfg(not(debug_assertions))]
     if url.scheme() != "https" {
         bail!("only https scheme is supported");
     }
