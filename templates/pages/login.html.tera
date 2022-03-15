@@ -6,7 +6,7 @@
 <div class="modal-header p-5 pb-4 border-bottom-0 d-block">
   <h2 class="fw-bold mb-0">Sign in to continue</h2>
   {% if next_host %}
-    <div class="text-muted">{{ next_host }} needs authentication</div>
+    <div class="text-muted"><b>{{ next_host }}</b> needs authentication</div>
   {% endif %}
 </div>
 <div class="modal-body p-5 pt-0">
