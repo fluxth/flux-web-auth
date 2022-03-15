@@ -1,11 +1,11 @@
 use anyhow::{bail, format_err, Result};
-use rocket::State;
-use url::Url;
-
 use jwt::{PKeyWithDigest, SignWithKey, VerifyWithKey};
 use openssl::hash::MessageDigest;
 use openssl::pkey::PKey;
+use rocket::State;
+use serde_json::{json, Value};
 use std::collections::BTreeMap;
+use url::Url;
 
 pub fn validate_next_url(next: &str, config: &State<crate::Config>) -> anyhow::Result<Url> {
     if next.len() == 0 {
@@ -36,7 +36,6 @@ pub fn validate_next_url(next: &str, config: &State<crate::Config>) -> anyhow::R
 }
 
 pub fn generate_jwt(private_key: &[u8], username: &str) -> Result<String> {
-    use serde_json::json;
     let private_key = openssl::ec::EcKey::private_key_from_pem(private_key)?;
     let key = PKeyWithDigest {
         key: PKey::from_ec_key(private_key)?,
@@ -61,7 +60,7 @@ pub fn generate_jwt(private_key: &[u8], username: &str) -> Result<String> {
     Ok(claims.sign_with_key(&key)?)
 }
 
-type JwtToken = jwt::Token<jwt::Header, BTreeMap<String, String>, jwt::Verified>;
+type JwtToken = jwt::Token<jwt::Header, BTreeMap<String, Value>, jwt::Verified>;
 pub fn decode_jwt(public_key: &[u8], jwt: &str) -> Result<JwtToken> {
     let public_key = openssl::ec::EcKey::public_key_from_pem(public_key)?;
     let key = PKeyWithDigest {
@@ -74,12 +73,12 @@ pub fn decode_jwt(public_key: &[u8], jwt: &str) -> Result<JwtToken> {
 
 pub fn jwt_duration_is_valid(token: &JwtToken) -> bool {
     let claims = token.claims();
-    let now_unix = chrono::Utc::now().timestamp();
+    let now_unix = chrono::Utc::now().timestamp() as u64;
 
-    if let Some(expiry_unix_str) = claims.get("exp") {
-        let expiry_unix = match expiry_unix_str.parse::<i64>() {
-            Ok(value) => value,
-            Err(_) => {
+    if let Some(expiry_unix_value) = claims.get("exp") {
+        let expiry_unix = match expiry_unix_value.as_u64() {
+            Some(value) => value,
+            None => {
                 return false;
             }
         };
@@ -90,10 +89,10 @@ pub fn jwt_duration_is_valid(token: &JwtToken) -> bool {
         }
     }
 
-    if let Some(not_before_unix_str) = claims.get("nbf") {
-        let not_before_unix = match not_before_unix_str.parse::<i64>() {
-            Ok(value) => value,
-            Err(_) => {
+    if let Some(not_before_unix_value) = claims.get("nbf") {
+        let not_before_unix = match not_before_unix_value.as_u64() {
+            Some(value) => value,
+            None => {
                 return false;
             }
         };

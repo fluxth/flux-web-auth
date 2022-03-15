@@ -47,7 +47,13 @@ fn rocket() -> _ {
         .register("/", catchers![catchers::not_found])
         .mount(
             "/",
-            routes![views::get_login, views::post_login, views::get_logout],
+            routes![
+                views::get_root,
+                views::get_status,
+                views::get_login,
+                views::post_login,
+                views::get_logout,
+            ],
         )
         .mount("/static", FileServer::from("./static"))
 }
