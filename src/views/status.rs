@@ -48,7 +48,7 @@ pub fn get_status(
     let mut button_url: Option<String> = None;
     let mut username: Option<String> = None;
 
-    if let Some(token) = cookies.get(crate::AUTHTOKEN_COOKIE_NAME) {
+    if let Some(token) = cookies.get(config.authtoken_cookie_name.as_str()) {
         if let Ok(token_data) = utils::decode_jwt(config.jwt_public_key.as_bytes(), token.value()) {
             if utils::jwt_duration_is_valid(&token_data) {
                 username = get_username_from_claims(token_data.claims());

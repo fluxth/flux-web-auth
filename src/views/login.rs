@@ -28,7 +28,8 @@ pub fn get_login(
     match validate_next_url(&next, &config) {
         Ok(url) => {
             // Check existing session
-            if has_active_session(cookies, config.jwt_public_key.as_bytes()) {
+            let authtoken_cookie = cookies.get(config.authtoken_cookie_name.as_str());
+            if has_active_session(authtoken_cookie, config.jwt_public_key.as_bytes()) {
                 return Ok(LoginResponse::Redirect(Redirect::to(next)));
             }
 
@@ -62,7 +63,8 @@ pub fn post_login(
     match validate_next_url(&next, &config) {
         Ok(url) => {
             // Check existing session
-            if has_active_session(cookies, config.jwt_public_key.as_bytes()) {
+            let authtoken_cookie = cookies.get(config.authtoken_cookie_name.as_str());
+            if has_active_session(authtoken_cookie, config.jwt_public_key.as_bytes()) {
                 return Ok(LoginProcessResponse::Redirect(Redirect::to(next)));
             }
 
@@ -84,8 +86,8 @@ pub fn post_login(
 
             // Set authtoken cookie with jwt content
             cookies.add(
-                Cookie::build(crate::AUTHTOKEN_COOKIE_NAME, jwt_token)
-                    .domain(crate::AUTHTOKEN_COOKIE_DOMAIN)
+                Cookie::build(config.authtoken_cookie_name.clone(), jwt_token)
+                    .domain(config.authtoken_cookie_domain.clone())
                     .path("/")
                     .secure(true)
                     .http_only(true)
@@ -103,8 +105,8 @@ pub fn post_login(
     }
 }
 
-fn has_active_session(cookies: &CookieJar<'_>, public_key: &[u8]) -> bool {
-    if let Some(token) = cookies.get(crate::AUTHTOKEN_COOKIE_NAME) {
+fn has_active_session(authtoken_cookie: Option<&Cookie>, public_key: &[u8]) -> bool {
+    if let Some(token) = authtoken_cookie {
         if let Ok(token) = crate::utils::decode_jwt(public_key, token.value()) {
             if crate::utils::jwt_duration_is_valid(&token) {
                 return true;

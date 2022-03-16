@@ -22,8 +22,8 @@ pub fn get_logout(
     };
 
     cookies.remove(
-        Cookie::build(crate::AUTHTOKEN_COOKIE_NAME, "")
-            .domain(crate::AUTHTOKEN_COOKIE_DOMAIN)
+        Cookie::build(config.authtoken_cookie_name.clone(), "")
+            .domain(config.authtoken_cookie_domain.clone())
             .finish(),
     );
 

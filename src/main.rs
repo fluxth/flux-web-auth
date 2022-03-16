@@ -14,6 +14,8 @@ pub struct Config {
     site_host: String,
     jwt_private_key: String,
     jwt_public_key: String,
+    authtoken_cookie_name: String,
+    authtoken_cookie_domain: String,
     allowed_next_hosts: Vec<String>,
 }
 
@@ -23,13 +25,6 @@ pub struct Config {
 const DEFAULT_SCHEME: &'static str = "http";
 #[cfg(not(debug_assertions))]
 const DEFAULT_SCHEME: &'static str = "https";
-
-#[cfg(debug_assertions)]
-const AUTHTOKEN_COOKIE_DOMAIN: &'static str = "localhost";
-#[cfg(not(debug_assertions))]
-const AUTHTOKEN_COOKIE_DOMAIN: &'static str = "flux.ci";
-
-const AUTHTOKEN_COOKIE_NAME: &'static str = "authtoken";
 
 #[launch]
 fn rocket() -> _ {
