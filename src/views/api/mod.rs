@@ -1,7 +1,7 @@
 mod info;
 pub use info::*;
 
-use rocket::serde::json::Json;
+use rocket::{http::Status, serde::json::Json};
 use serde::Serialize;
 
 #[derive(Serialize)]
@@ -21,6 +21,25 @@ where
         Json(Self {
             status: "success",
             data,
+        })
+    }
+}
+
+#[derive(Serialize)]
+pub struct ErrorResponse {
+    status: &'static str,
+    r#type: &'static str,
+    code: u16,
+    message: &'static str,
+}
+
+impl ErrorResponse {
+    pub fn http_error(status: Status) -> Json<Self> {
+        Json(Self {
+            status: "error",
+            r#type: "http",
+            code: status.code,
+            message: status.reason().unwrap_or("Unknown error"),
         })
     }
 }
