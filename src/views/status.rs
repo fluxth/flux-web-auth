@@ -1,10 +1,13 @@
-use rocket::http::{CookieJar, Status};
+use rocket::http::CookieJar;
 use rocket::request::{FromRequest, Outcome, Request};
 use rocket::serde::Serialize;
 use rocket::State;
 use rocket_dyn_templates::Template;
 use serde_json::Value;
 use std::collections::BTreeMap;
+
+#[cfg(not(debug_assertions))]
+use rocket::http::Status;
 
 use crate::utils;
 use crate::views;
@@ -16,35 +19,47 @@ struct StatusContext {
 }
 
 #[derive(Debug)]
-pub struct StatusHeaders {
-    host: String,
+pub struct StatusRequestContext {
     uri: String,
+    scheme: &'static str,
 }
 
 #[rocket::async_trait]
-impl<'a> FromRequest<'a> for StatusHeaders {
+impl<'a> FromRequest<'a> for StatusRequestContext {
     type Error = &'static str;
 
     async fn from_request(request: &'a Request<'_>) -> Outcome<Self, Self::Error> {
-        let host = match request.headers().get_one("Host") {
-            Some(value) => value.to_string(),
-            None => return Outcome::Failure((Status::BadRequest, "Host header required")),
+        let uri = request.uri().to_string();
+
+        #[cfg(debug_assertions)]
+        let scheme = "http";
+
+        #[cfg(not(debug_assertions))]
+        let scheme = match request.headers().get_one("X-Scheme") {
+            Some(scheme) => match scheme {
+                "http" => "http",
+                "https" => "https",
+                _ => return Outcome::Failure((Status::BadRequest, "invalid scheme")),
+            },
+            None => return Outcome::Failure((Status::BadRequest, "no X-Scheme header")),
         };
 
-        let uri = request.uri().to_string();
-        Outcome::Success(Self { host, uri })
+        Outcome::Success(Self { uri, scheme })
     }
 }
 
 #[get("/status")]
 pub fn get_status(
-    headers: StatusHeaders,
+    request_context: StatusRequestContext,
     config: &State<crate::Config>,
     cookies: &CookieJar<'_>,
 ) -> Template {
     let site_host = config.site_host.as_str();
 
-    let return_url = format!("{}://{}{}", crate::DEFAULT_SCHEME, site_host, headers.uri);
+    let return_url = format!(
+        "{}://{}{}",
+        request_context.scheme, site_host, request_context.uri
+    );
     let mut button_url: Option<String> = None;
     let mut username: Option<String> = None;
 

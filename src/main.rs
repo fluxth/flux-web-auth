@@ -19,13 +19,6 @@ pub struct Config {
     allowed_next_hosts: Vec<String>,
 }
 
-// FIXME: Move these into env config or something
-
-#[cfg(debug_assertions)]
-const DEFAULT_SCHEME: &'static str = "http";
-#[cfg(not(debug_assertions))]
-const DEFAULT_SCHEME: &'static str = "https";
-
 #[launch]
 fn rocket() -> _ {
     let rocket = rocket::build();
