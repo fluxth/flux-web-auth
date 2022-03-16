@@ -19,3 +19,4 @@ time = "0.2.26"
 jwt = { version = "0.16", features = ["openssl"] }
 openssl = "0.10.38"
 chrono = "0.4.19"
+rand = "0.8.5"

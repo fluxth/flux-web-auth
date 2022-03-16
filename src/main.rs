@@ -1,4 +1,5 @@
 mod catchers;
+mod fairings;
 mod utils;
 mod views;
 
@@ -34,6 +35,7 @@ fn rocket() -> _ {
 
     rocket
         .attach(Template::fairing())
+        .attach(fairings::CSRFCookieInjector::new())
         .manage(config)
         .register("/", catchers![catchers::not_found])
         .mount(
