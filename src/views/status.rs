@@ -42,12 +42,9 @@ pub fn get_status(
     config: &State<crate::Config>,
     cookies: &CookieJar<'_>,
 ) -> Template {
-    #[cfg(debug_assertions)]
-    let host = &headers.host;
-    #[cfg(not(debug_assertions))]
-    let host = crate::SITE_HOST;
+    let site_host = config.site_host.as_str();
 
-    let return_url = format!("{}://{}{}", crate::DEFAULT_SCHEME, host, headers.uri);
+    let return_url = format!("{}://{}{}", crate::DEFAULT_SCHEME, site_host, headers.uri);
     let mut button_url: Option<String> = None;
     let mut username: Option<String> = None;
 

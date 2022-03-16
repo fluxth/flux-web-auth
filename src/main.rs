@@ -11,6 +11,7 @@ use serde::Deserialize;
 
 #[derive(Debug, Deserialize)]
 pub struct Config {
+    site_host: String,
     jwt_private_key: String,
     jwt_public_key: String,
     allowed_next_hosts: Vec<String>,
@@ -22,9 +23,6 @@ pub struct Config {
 const DEFAULT_SCHEME: &'static str = "http";
 #[cfg(not(debug_assertions))]
 const DEFAULT_SCHEME: &'static str = "https";
-
-#[cfg(not(debug_assertions))]
-const SITE_HOST: &'static str = "auth.flux.ci";
 
 #[cfg(debug_assertions)]
 const AUTHTOKEN_COOKIE_DOMAIN: &'static str = "localhost";
