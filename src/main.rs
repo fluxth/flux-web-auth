@@ -46,5 +46,6 @@ fn rocket() -> _ {
                 views::get_logout,
             ],
         )
+        .mount("/api", routes![views::api::get_info])
         .mount("/static", FileServer::from("./static"))
 }

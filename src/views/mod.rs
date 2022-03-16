@@ -1,5 +1,7 @@
 use rocket::response::Redirect;
 
+pub mod api;
+
 mod login;
 pub use login::*;
 
