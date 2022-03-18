@@ -12,7 +12,7 @@ pub struct ServerInfo {
 #[get("/info")]
 pub fn get_info() -> Json<SuccessResponse<ServerInfo>> {
     SuccessResponse::new(ServerInfo {
-        server: env!("CARGO_PKG_NAME"),
-        version: env!("CARGO_PKG_VERSION"),
+        server: crate::APP_NAME,
+        version: crate::APP_VERSION,
     })
 }
