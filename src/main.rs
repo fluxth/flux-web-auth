@@ -10,7 +10,7 @@ use rocket::fs::FileServer;
 use rocket_dyn_templates::Template;
 use serde::Deserialize;
 
-const APP_NAME: &'static str = env!("CARGO_CRATE_NAME");
+const APP_NAME: &'static str = "flux-web-auth";
 const APP_VERSION: &'static str = git_version::git_describe!();
 
 #[derive(Debug, Deserialize)]
