@@ -25,6 +25,8 @@ pub struct Config {
 
 #[launch]
 fn rocket() -> _ {
+    println!("Starting {} v{}...", APP_NAME, APP_VERSION);
+
     let rocket = rocket::build();
 
     let figment = rocket.figment();
