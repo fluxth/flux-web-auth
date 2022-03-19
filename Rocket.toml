@@ -1,12 +1,16 @@
 [default]
+port = 8000
 template_dir = "templates"
 
+# Database credentials for development
 [global.databases]
 auth_db = { url = "postgres://testdb:testdb@localhost/auth" }
 
+[debug]
+address = "127.0.0.1"
+
 [release]
-address = "0.0.0.0"
-port = 8000
+address = "::"
 ident = false
 cli_colors = false
 ctrlc = false
