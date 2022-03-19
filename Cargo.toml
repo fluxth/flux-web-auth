@@ -19,5 +19,12 @@ time = "0.2.26"
 jwt = { version = "0.16", features = ["openssl"] }
 openssl = "0.10.38"
 chrono = "0.4.19"
+argon2 = "0.4.0"
 rand = "0.8.5"
 git-version = "0.3.5"
+diesel = { version = "1.4.8", features = ["postgres", "chrono"] }
+
+[dependencies.rocket_sync_db_pools]
+version = "0.1.0-rc.1"
+default-features = false
+features = ["diesel_postgres_pool"]

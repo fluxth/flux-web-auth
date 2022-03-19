@@ -1,3 +1,4 @@
+use argon2::{Argon2, PasswordHash, PasswordVerifier};
 use rocket::form::Form;
 use rocket::http::{Cookie, CookieJar};
 use rocket::response::Redirect;
@@ -6,15 +7,18 @@ use rocket::State;
 use rocket_dyn_templates::Template;
 use serde_json::json;
 
+use crate::models;
 use crate::utils::{
     decode_jwt, generate_jwt, get_csrf_token, jwt_duration_is_valid, validate_next_url, CSRFToken,
 };
+
+const ERROR_MSG_LOGIN_FAILED: &'static str = "Invalid username or password";
 
 #[derive(Serialize)]
 struct LoginContext<'a> {
     next_host: Option<&'a str>,
     error: Option<&'a str>,
-    csrf_token: CSRFToken<'a>,
+    csrf_token: &'a CSRFToken<'a>,
 }
 
 #[derive(Responder)]
@@ -43,7 +47,7 @@ pub fn get_login(
                 LoginContext {
                     next_host: url.host_str(),
                     error: None,
-                    csrf_token: get_csrf_token(cookies),
+                    csrf_token: &get_csrf_token(cookies),
                 },
             )))
         }
@@ -67,7 +71,8 @@ pub struct LoginForm<'a> {
 }
 
 #[post("/login?<next>", data = "<form>")]
-pub fn post_login(
+pub async fn post_login(
+    database: crate::AuthDatabase,
     config: &State<crate::Config>,
     cookies: &CookieJar<'_>,
     next: String,
@@ -75,17 +80,24 @@ pub fn post_login(
 ) -> Result<LoginProcessResponse, Template> {
     match validate_next_url(&next, &config) {
         Ok(url) => {
-            // Check CSRF token
-            let token = get_csrf_token(cookies);
-            if token.as_str() != form.csrf_token {
-                return Ok(LoginProcessResponse::Template(Template::render(
+            let csrf_token = get_csrf_token(cookies);
+            let render_login_page = |error: Option<&str>| {
+                let token = &csrf_token;
+                Template::render(
                     "pages/login",
                     LoginContext {
                         next_host: url.host_str(),
-                        error: Some("CSRF Token Mismatch"),
+                        error,
                         csrf_token: token,
                     },
-                )));
+                )
+            };
+
+            // Check CSRF token
+            if csrf_token.as_str() != form.csrf_token {
+                return Ok(LoginProcessResponse::Template(render_login_page(Some(
+                    "CSRF Token Mismatch",
+                ))));
             }
 
             // Check existing session
@@ -94,21 +106,62 @@ pub fn post_login(
                 return Ok(LoginProcessResponse::Redirect(Redirect::to(next)));
             }
 
-            // TODO: Authenticate
+            // Authenticate user
+            println!("User '{}' tried logging in", form.username);
 
-            let jwt_token = match generate_jwt(config.jwt_private_key.as_bytes(), "anon") {
-                    Ok(token) => token,
-                    Err(_) => {
-                        return Ok(LoginProcessResponse::Template(Template::render(
-                            "pages/login",
-                            LoginContext {
-                                next_host: url.host_str(),
-                                error: Some("Auth token generation failed"),
-                                csrf_token: get_csrf_token(cookies),
-                            },
-                        )));
-                    }
+            let username = form.username.to_string();
+            let user = match database
+                .run(move |conn| models::User::find_username(conn, &username))
+                .await
+            {
+                Ok(user) => user,
+                Err(_) => {
+                    eprintln!("User '{}' failed to login: No such user", form.username);
+                    return Ok(LoginProcessResponse::Template(render_login_page(Some(
+                        ERROR_MSG_LOGIN_FAILED,
+                    ))));
+                }
+            };
+
+            let hash = match PasswordHash::new(&user.password) {
+                Ok(hash) => hash,
+                Err(_) => {
+                    return Err(render_login_page(Some(
+                        "Password corrupted, please reset your password",
+                    )))
+                }
+            };
+
+            if let Err(error) = Argon2::default().verify_password(form.password.as_bytes(), &hash) {
+                eprintln!(
+                    "User '{}' failed to login: Verify password failed: {:?}",
+                    form.username, &error
+                );
+
+                let error_message = match error {
+                    argon2::password_hash::Error::Password => "Invalid username or password",
+                    _ => "An unknown error occurred",
                 };
+
+                // Wrong password
+                return Ok(LoginProcessResponse::Template(render_login_page(Some(
+                    error_message,
+                ))));
+            };
+
+            let jwt_token = match generate_jwt(config.jwt_private_key.as_bytes(), form.username) {
+                Ok(token) => token,
+                Err(error) => {
+                    eprintln!(
+                        "User '{}' failed to login: AuthToken generation failed: {:?}",
+                        form.username, &error
+                    );
+
+                    return Ok(LoginProcessResponse::Template(render_login_page(Some(
+                        "Auth token generation failed",
+                    ))));
+                }
+            };
 
             // Set authtoken cookie with jwt content
             cookies.add(

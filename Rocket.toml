@@ -1,6 +1,9 @@
 [default]
 template_dir = "templates"
 
+[global.databases]
+auth_db = { url = "postgres://testdb:testdb@localhost/auth" }
+
 [release]
 address = "0.0.0.0"
 port = 8000

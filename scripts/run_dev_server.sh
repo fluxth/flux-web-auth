@@ -2,6 +2,7 @@
 
 SCRIPT_PATH=$(dirname $0)
 
+export DATABASE_URL=postgres://testdb:testdb@localhost/auth
 export ROCKET_SITE_HOST=localhost:8000
 export ROCKET_AUTHTOKEN_COOKIE_NAME=authtoken
 export ROCKET_AUTHTOKEN_COOKIE_DOMAIN=localhost
