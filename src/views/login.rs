@@ -9,6 +9,7 @@ use serde_json::json;
 
 use crate::database::AuthDatabase;
 use crate::models;
+use crate::unwrap_or_return;
 use crate::utils::{
     decode_jwt, generate_jwt, get_csrf_token, jwt_duration_is_valid, validate_next_url, CSRFToken,
 };
@@ -34,28 +35,27 @@ pub fn get_login(
     cookies: &CookieJar<'_>,
     next: String,
 ) -> Result<LoginResponse, Template> {
-    match validate_next_url(&next, &config) {
-        Ok(url) => {
-            // Check existing session
-            let authtoken_cookie = cookies.get(config.authtoken_cookie_name.as_str());
-            if has_active_session(authtoken_cookie, config.jwt_public_key.as_bytes()) {
-                return Ok(LoginResponse::Redirect(Redirect::to(next)));
-            }
+    // Check invalid host
+    let url = unwrap_or_return!(
+        validate_next_url(&next, &config),
+        Err(Template::render("errors/host_denied", json!({})))
+    );
 
-            // Render login form
-            Ok(LoginResponse::Template(Template::render(
-                "pages/login",
-                LoginContext {
-                    next_host: url.host_str(),
-                    error: None,
-                    csrf_token: &get_csrf_token(cookies),
-                },
-            )))
-        }
-
-        // Invalid host
-        Err(_) => Err(Template::render("errors/host_denied", json!({}))),
+    // Check existing session
+    let authtoken_cookie = cookies.get(config.authtoken_cookie_name.as_str());
+    if has_active_session(authtoken_cookie, config.jwt_public_key.as_bytes()) {
+        return Ok(LoginResponse::Redirect(Redirect::to(next)));
     }
+
+    // Render login form
+    Ok(LoginResponse::Template(Template::render(
+        "pages/login",
+        LoginContext {
+            next_host: url.host_str(),
+            error: None,
+            csrf_token: &get_csrf_token(cookies),
+        },
+    )))
 }
 
 #[derive(FromForm)]
@@ -73,110 +73,106 @@ pub async fn post_login(
     next: String,
     form: Form<LoginForm<'_>>,
 ) -> Result<LoginResponse, Template> {
-    match validate_next_url(&next, &config) {
-        Ok(url) => {
-            let csrf_token = get_csrf_token(cookies);
-            let render_login_page = |error: Option<&str>| {
-                let token = &csrf_token;
-                Template::render(
-                    "pages/login",
-                    LoginContext {
-                        next_host: url.host_str(),
-                        error,
-                        csrf_token: token,
-                    },
-                )
-            };
+    // Check invalid host
+    let url = unwrap_or_return!(
+        validate_next_url(&next, &config),
+        Err(Template::render("errors/host_denied", json!({})))
+    );
 
-            // Check CSRF token
-            if csrf_token.as_str() != form.csrf_token {
-                return Ok(LoginResponse::Template(render_login_page(Some(
-                    "CSRF Token Mismatch",
-                ))));
-            }
+    let csrf_token = get_csrf_token(cookies);
+    let render_login_page = |error: Option<&str>| {
+        let token = &csrf_token;
+        Template::render(
+            "pages/login",
+            LoginContext {
+                next_host: url.host_str(),
+                error,
+                csrf_token: token,
+            },
+        )
+    };
 
-            // Check existing session
-            let authtoken_cookie = cookies.get(config.authtoken_cookie_name.as_str());
-            if has_active_session(authtoken_cookie, config.jwt_public_key.as_bytes()) {
-                return Ok(LoginResponse::Redirect(Redirect::to(next)));
-            }
+    // Check CSRF token
+    if csrf_token.as_str() != form.csrf_token {
+        return Ok(LoginResponse::Template(render_login_page(Some(
+            "CSRF Token Mismatch",
+        ))));
+    }
 
-            // Authenticate user
-            println!("User '{}' tried logging in", form.username);
+    // Check existing session
+    let authtoken_cookie = cookies.get(config.authtoken_cookie_name.as_str());
+    if has_active_session(authtoken_cookie, config.jwt_public_key.as_bytes()) {
+        return Ok(LoginResponse::Redirect(Redirect::to(next)));
+    }
 
-            let username = form.username.to_string();
-            let user = match database
-                .run(move |conn| models::User::find_username(conn, &username))
-                .await
-            {
-                Ok(user) => user,
-                Err(_) => {
-                    eprintln!("User '{}' failed to login: No such user", form.username);
-                    return Ok(LoginResponse::Template(render_login_page(Some(
-                        ERROR_MSG_LOGIN_FAILED,
-                    ))));
-                }
-            };
+    // Authenticate user
+    println!("User '{}' tried logging in", form.username);
 
-            let hash = match PasswordHash::new(&user.password) {
-                Ok(hash) => hash,
-                Err(_) => {
-                    return Err(render_login_page(Some(
-                        "Password corrupted, please reset your password",
-                    )))
-                }
-            };
+    let username = form.username.to_string();
+    let user = unwrap_or_return!(
+        database
+            .run(move |conn| models::User::find_username(conn, &username))
+            .await,
+        {
+            eprintln!("User '{}' failed to login: No such user", form.username);
+            Ok(LoginResponse::Template(render_login_page(Some(
+                ERROR_MSG_LOGIN_FAILED,
+            ))))
+        }
+    );
 
-            if let Err(error) = Argon2::default().verify_password(form.password.as_bytes(), &hash) {
-                eprintln!(
-                    "User '{}' failed to login: Verify password failed: {:?}",
-                    form.username, &error
-                );
+    let hash = unwrap_or_return!(
+        PasswordHash::new(&user.password),
+        Err(render_login_page(Some(
+            "Password corrupted, please reset your password",
+        )))
+    );
 
-                let error_message = match error {
-                    argon2::password_hash::Error::Password => "Invalid username or password",
-                    _ => "An unknown error occurred",
-                };
+    if let Err(error) = Argon2::default().verify_password(form.password.as_bytes(), &hash) {
+        eprintln!(
+            "User '{}' failed to login: Verify password failed: {:?}",
+            form.username, &error
+        );
 
-                // Wrong password
-                return Ok(LoginResponse::Template(render_login_page(Some(
-                    error_message,
-                ))));
-            };
+        let error_message = match error {
+            argon2::password_hash::Error::Password => "Invalid username or password",
+            _ => "An unknown error occurred",
+        };
 
-            let jwt_token = match generate_jwt(config.jwt_private_key.as_bytes(), form.username) {
-                Ok(token) => token,
-                Err(error) => {
-                    eprintln!(
-                        "User '{}' failed to login: AuthToken generation failed: {:?}",
-                        form.username, &error
-                    );
+        // Wrong password
+        return Ok(LoginResponse::Template(render_login_page(Some(
+            error_message,
+        ))));
+    };
 
-                    return Ok(LoginResponse::Template(render_login_page(Some(
-                        "Auth token generation failed",
-                    ))));
-                }
-            };
-
-            // Set authtoken cookie with jwt content
-            cookies.add(
-                Cookie::build(config.authtoken_cookie_name.clone(), jwt_token)
-                    .domain(config.authtoken_cookie_domain.clone())
-                    .path("/")
-                    .secure(true)
-                    .http_only(true)
-                    .max_age(time::Duration::days(7))
-                    .same_site(rocket::http::SameSite::Strict)
-                    .finish(),
+    let jwt_token = match generate_jwt(config.jwt_private_key.as_bytes(), form.username) {
+        Ok(token) => token,
+        Err(error) => {
+            eprintln!(
+                "User '{}' failed to login: AuthToken generation failed: {:?}",
+                form.username, &error
             );
 
-            // Redirect to next url
-            Ok(LoginResponse::Redirect(Redirect::to(next)))
+            return Ok(LoginResponse::Template(render_login_page(Some(
+                "Auth token generation failed",
+            ))));
         }
+    };
 
-        // Invalid host
-        Err(_) => Err(Template::render("errors/host_denied", json!({}))),
-    }
+    // Set authtoken cookie with jwt content
+    cookies.add(
+        Cookie::build(config.authtoken_cookie_name.clone(), jwt_token)
+            .domain(config.authtoken_cookie_domain.clone())
+            .path("/")
+            .secure(true)
+            .http_only(true)
+            .max_age(time::Duration::days(7))
+            .same_site(rocket::http::SameSite::Strict)
+            .finish(),
+    );
+
+    // Redirect to next url
+    Ok(LoginResponse::Redirect(Redirect::to(next)))
 }
 
 fn has_active_session(authtoken_cookie: Option<&Cookie>, public_key: &[u8]) -> bool {

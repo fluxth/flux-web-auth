@@ -14,6 +14,16 @@ use url::Url;
 
 use crate::{CSRF_TOKEN_COOKIE_NAME, CSRF_TOKEN_LENGTH};
 
+#[macro_export]
+macro_rules! unwrap_or_return {
+    ($expr:expr, $return_value:expr) => {
+        match $expr {
+            Ok(value) => value,
+            Err(_) => return $return_value,
+        }
+    };
+}
+
 pub fn validate_next_url(next: &str, config: &State<crate::Config>) -> anyhow::Result<Url> {
     if next.len() == 0 {
         bail!("`next` parameter is required");
