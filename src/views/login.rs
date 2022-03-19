@@ -58,12 +58,6 @@ pub fn get_login(
     }
 }
 
-#[derive(Responder)]
-pub enum LoginProcessResponse {
-    Redirect(Redirect),
-    Template(Template),
-}
-
 #[derive(FromForm)]
 pub struct LoginForm<'a> {
     username: &'a str,
@@ -78,7 +72,7 @@ pub async fn post_login(
     cookies: &CookieJar<'_>,
     next: String,
     form: Form<LoginForm<'_>>,
-) -> Result<LoginProcessResponse, Template> {
+) -> Result<LoginResponse, Template> {
     match validate_next_url(&next, &config) {
         Ok(url) => {
             let csrf_token = get_csrf_token(cookies);
@@ -96,7 +90,7 @@ pub async fn post_login(
 
             // Check CSRF token
             if csrf_token.as_str() != form.csrf_token {
-                return Ok(LoginProcessResponse::Template(render_login_page(Some(
+                return Ok(LoginResponse::Template(render_login_page(Some(
                     "CSRF Token Mismatch",
                 ))));
             }
@@ -104,7 +98,7 @@ pub async fn post_login(
             // Check existing session
             let authtoken_cookie = cookies.get(config.authtoken_cookie_name.as_str());
             if has_active_session(authtoken_cookie, config.jwt_public_key.as_bytes()) {
-                return Ok(LoginProcessResponse::Redirect(Redirect::to(next)));
+                return Ok(LoginResponse::Redirect(Redirect::to(next)));
             }
 
             // Authenticate user
@@ -118,7 +112,7 @@ pub async fn post_login(
                 Ok(user) => user,
                 Err(_) => {
                     eprintln!("User '{}' failed to login: No such user", form.username);
-                    return Ok(LoginProcessResponse::Template(render_login_page(Some(
+                    return Ok(LoginResponse::Template(render_login_page(Some(
                         ERROR_MSG_LOGIN_FAILED,
                     ))));
                 }
@@ -145,7 +139,7 @@ pub async fn post_login(
                 };
 
                 // Wrong password
-                return Ok(LoginProcessResponse::Template(render_login_page(Some(
+                return Ok(LoginResponse::Template(render_login_page(Some(
                     error_message,
                 ))));
             };
@@ -158,7 +152,7 @@ pub async fn post_login(
                         form.username, &error
                     );
 
-                    return Ok(LoginProcessResponse::Template(render_login_page(Some(
+                    return Ok(LoginResponse::Template(render_login_page(Some(
                         "Auth token generation failed",
                     ))));
                 }
@@ -177,7 +171,7 @@ pub async fn post_login(
             );
 
             // Redirect to next url
-            Ok(LoginProcessResponse::Redirect(Redirect::to(next)))
+            Ok(LoginResponse::Redirect(Redirect::to(next)))
         }
 
         // Invalid host
