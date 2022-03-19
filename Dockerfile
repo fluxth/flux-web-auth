@@ -19,6 +19,7 @@ RUN mkdir .cargo && \
     cargo vendor > .cargo/config
 
 COPY src ./src
+COPY migrations ./migrations
 COPY .git ./.git
 RUN cargo install --target x86_64-unknown-linux-musl --path . --root /usr/local/cargo && \
     strip /usr/local/cargo/bin/flux-web-auth
