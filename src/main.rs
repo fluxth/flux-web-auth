@@ -11,11 +11,14 @@ extern crate rocket;
 #[macro_use]
 extern crate diesel;
 
-//#[cfg(not(debug_assertions))]
+#[cfg(not(debug_assertions))]
 #[macro_use]
 extern crate diesel_migrations;
 
-use rocket::{fairing::AdHoc, fs::FileServer};
+#[cfg(not(debug_assertions))]
+use rocket::fairing::AdHoc;
+
+use rocket::fs::FileServer;
 use rocket_dyn_templates::Template;
 use serde::Deserialize;
 
@@ -50,13 +53,17 @@ fn rocket() -> _ {
         env
     };
 
-    rocket
+    let rocket = rocket
         .attach(Template::fairing())
-        .attach(database::AuthDatabase::fairing())
-        .attach(AdHoc::on_ignite(
-            "'auth_db' Database Migrations",
-            database::run_migrations,
-        ))
+        .attach(database::AuthDatabase::fairing());
+
+    #[cfg(not(debug_assertions))]
+    let rocket = rocket.attach(AdHoc::on_ignite(
+        "'auth_db' Database Migrations",
+        database::run_migrations,
+    ));
+
+    rocket
         .manage(config)
         .register("/", catchers![catchers::not_found])
         .mount(
