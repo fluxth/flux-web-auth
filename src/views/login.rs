@@ -5,12 +5,13 @@ use rocket::State;
 use rocket_dyn_templates::Template;
 use serde_json::json;
 
-use crate::utils::validate_next_url;
+use crate::utils::{get_csrf_token, validate_next_url, CSRFToken};
 
 #[derive(Serialize)]
 struct LoginContext<'a> {
     next_host: Option<&'a str>,
     error: Option<&'a str>,
+    csrf_token: CSRFToken<'a>,
 }
 
 #[derive(Responder)]
@@ -39,6 +40,7 @@ pub fn get_login(
                 LoginContext {
                     next_host: url.host_str(),
                     error: None,
+                    csrf_token: get_csrf_token(cookies),
                 },
             )))
         }
@@ -79,6 +81,7 @@ pub fn post_login(
                             LoginContext {
                                 next_host: url.host_str(),
                                 error: Some("Auth token generation failed"),
+                                csrf_token: get_csrf_token(cookies),
                             },
                         )));
                     }

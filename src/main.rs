@@ -1,5 +1,4 @@
 mod catchers;
-mod fairings;
 mod utils;
 mod views;
 
@@ -12,6 +11,9 @@ use serde::Deserialize;
 
 const APP_NAME: &'static str = "flux-web-auth";
 const APP_VERSION: &'static str = git_version::git_describe!();
+
+const CSRF_TOKEN_COOKIE_NAME: &'static str = "csrftoken";
+const CSRF_TOKEN_LENGTH: usize = 32;
 
 #[derive(Debug, Deserialize)]
 pub struct Config {
@@ -40,7 +42,6 @@ fn rocket() -> _ {
 
     rocket
         .attach(Template::fairing())
-        .attach(fairings::CSRFCookieInjector::new())
         .manage(config)
         .register("/", catchers![catchers::not_found])
         .mount(

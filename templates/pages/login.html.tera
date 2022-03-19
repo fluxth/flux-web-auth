@@ -27,6 +27,7 @@
       <input type="password" class="form-control rounded-4" id="floatingPassword" placeholder="Password" required>
       <label for="floatingPassword">Password</label>
     </div>
+    <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
     <button class="w-100 mb-2 btn btn-lg rounded-4 btn-primary" type="submit">Sign in</button>
     <small class="text-muted">By clicking Sign in, you agree to the <a href="#">terms of use</a>.</small>
   </form>

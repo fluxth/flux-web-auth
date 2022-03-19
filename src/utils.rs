@@ -2,10 +2,17 @@ use anyhow::{bail, format_err, Result};
 use jwt::{PKeyWithDigest, SignWithKey, VerifyWithKey};
 use openssl::hash::MessageDigest;
 use openssl::pkey::PKey;
-use rocket::State;
+use rand::distributions::Alphanumeric;
+use rand::{thread_rng, Rng};
+use rocket::{
+    http::{Cookie, CookieJar, SameSite},
+    State,
+};
 use serde_json::{json, Value};
 use std::collections::BTreeMap;
 use url::Url;
+
+use crate::{CSRF_TOKEN_COOKIE_NAME, CSRF_TOKEN_LENGTH};
 
 pub fn validate_next_url(next: &str, config: &State<crate::Config>) -> anyhow::Result<Url> {
     if next.len() == 0 {
@@ -104,4 +111,40 @@ pub fn jwt_duration_is_valid(token: &JwtToken) -> bool {
     }
 
     true
+}
+
+#[derive(serde::Serialize)]
+#[serde(untagged)]
+pub enum CSRFToken<'a> {
+    NewToken(String),
+    ExistingToken(&'a str),
+}
+
+pub fn get_csrf_token<'a>(cookies: &'a CookieJar) -> CSRFToken<'a> {
+    // Return existing CSRF token
+    if let Some(cookie) = cookies.get(CSRF_TOKEN_COOKIE_NAME) {
+        // Validate token
+        let token = cookie.value();
+        if token.len() == CSRF_TOKEN_LENGTH {
+            return CSRFToken::ExistingToken(cookie.value());
+        }
+    }
+
+    // No valid token exists, generate a new token
+    let csrf_token: String = thread_rng()
+        .sample_iter(&Alphanumeric)
+        .take(CSRF_TOKEN_LENGTH)
+        .map(char::from)
+        .collect();
+
+    // Build cookie and inject into current request
+    let csrf_cookie = Cookie::build(CSRF_TOKEN_COOKIE_NAME, csrf_token.clone())
+        .path("/")
+        .secure(true)
+        .same_site(SameSite::Strict)
+        .finish();
+
+    cookies.add(csrf_cookie);
+
+    CSRFToken::NewToken(csrf_token)
 }
