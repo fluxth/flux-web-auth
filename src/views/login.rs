@@ -7,6 +7,7 @@ use rocket::State;
 use rocket_dyn_templates::Template;
 use serde_json::json;
 
+use crate::database::AuthDatabase;
 use crate::models;
 use crate::utils::{
     decode_jwt, generate_jwt, get_csrf_token, jwt_duration_is_valid, validate_next_url, CSRFToken,
@@ -72,7 +73,7 @@ pub struct LoginForm<'a> {
 
 #[post("/login?<next>", data = "<form>")]
 pub async fn post_login(
-    database: crate::AuthDatabase,
+    database: AuthDatabase,
     config: &State<crate::Config>,
     cookies: &CookieJar<'_>,
     next: String,

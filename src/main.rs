@@ -1,4 +1,5 @@
 mod catchers;
+mod database;
 mod models;
 mod schema;
 mod utils;
@@ -12,7 +13,6 @@ extern crate diesel;
 
 use rocket::fs::FileServer;
 use rocket_dyn_templates::Template;
-use rocket_sync_db_pools::database;
 use serde::Deserialize;
 
 const APP_NAME: &'static str = "flux-web-auth";
@@ -31,9 +31,6 @@ pub struct Config {
     allowed_next_hosts: Vec<String>,
 }
 
-#[database("auth_db")]
-pub struct AuthDatabase(diesel::PgConnection);
-
 #[launch]
 fn rocket() -> _ {
     println!("Starting {} v{}...", APP_NAME, APP_VERSION);
@@ -51,7 +48,7 @@ fn rocket() -> _ {
 
     rocket
         .attach(Template::fairing())
-        .attach(AuthDatabase::fairing())
+        .attach(database::AuthDatabase::fairing())
         .manage(config)
         .register("/", catchers![catchers::not_found])
         .mount(
