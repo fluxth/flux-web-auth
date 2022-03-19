@@ -6,7 +6,9 @@ use rocket::State;
 use rocket_dyn_templates::Template;
 use serde_json::json;
 
-use crate::utils::{get_csrf_token, validate_next_url, CSRFToken};
+use crate::utils::{
+    decode_jwt, generate_jwt, get_csrf_token, jwt_duration_is_valid, validate_next_url, CSRFToken,
+};
 
 #[derive(Serialize)]
 struct LoginContext<'a> {
@@ -94,8 +96,7 @@ pub fn post_login(
 
             // TODO: Authenticate
 
-            let jwt_token =
-                match crate::utils::generate_jwt(config.jwt_private_key.as_bytes(), "anon") {
+            let jwt_token = match generate_jwt(config.jwt_private_key.as_bytes(), "anon") {
                     Ok(token) => token,
                     Err(_) => {
                         return Ok(LoginProcessResponse::Template(Template::render(
@@ -132,8 +133,8 @@ pub fn post_login(
 
 fn has_active_session(authtoken_cookie: Option<&Cookie>, public_key: &[u8]) -> bool {
     if let Some(token) = authtoken_cookie {
-        if let Ok(token) = crate::utils::decode_jwt(public_key, token.value()) {
-            if crate::utils::jwt_duration_is_valid(&token) {
+        if let Ok(token) = decode_jwt(public_key, token.value()) {
+            if jwt_duration_is_valid(&token) {
                 return true;
             }
         }
