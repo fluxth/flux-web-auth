@@ -1,3 +1,4 @@
+use rocket::form::Form;
 use rocket::http::{Cookie, CookieJar};
 use rocket::response::Redirect;
 use rocket::serde::Serialize;
@@ -56,14 +57,35 @@ pub enum LoginProcessResponse {
     Template(Template),
 }
 
-#[post("/login?<next>")]
+#[derive(FromForm)]
+pub struct LoginForm<'a> {
+    username: &'a str,
+    password: &'a str,
+    csrf_token: &'a str,
+}
+
+#[post("/login?<next>", data = "<form>")]
 pub fn post_login(
     config: &State<crate::Config>,
     cookies: &CookieJar<'_>,
     next: String,
+    form: Form<LoginForm<'_>>,
 ) -> Result<LoginProcessResponse, Template> {
     match validate_next_url(&next, &config) {
         Ok(url) => {
+            // Check CSRF token
+            let token = get_csrf_token(cookies);
+            if token.as_str() != form.csrf_token {
+                return Ok(LoginProcessResponse::Template(Template::render(
+                    "pages/login",
+                    LoginContext {
+                        next_host: url.host_str(),
+                        error: Some("CSRF Token Mismatch"),
+                        csrf_token: token,
+                    },
+                )));
+            }
+
             // Check existing session
             let authtoken_cookie = cookies.get(config.authtoken_cookie_name.as_str());
             if has_active_session(authtoken_cookie, config.jwt_public_key.as_bytes()) {

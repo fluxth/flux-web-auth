@@ -120,6 +120,15 @@ pub enum CSRFToken<'a> {
     ExistingToken(&'a str),
 }
 
+impl CSRFToken<'_> {
+    pub fn as_str(&self) -> &str {
+        match self {
+            Self::NewToken(token) => &token,
+            Self::ExistingToken(token) => token,
+        }
+    }
+}
+
 pub fn get_csrf_token<'a>(cookies: &'a CookieJar) -> CSRFToken<'a> {
     // Return existing CSRF token
     if let Some(cookie) = cookies.get(CSRF_TOKEN_COOKIE_NAME) {
