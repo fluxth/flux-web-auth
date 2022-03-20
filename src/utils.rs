@@ -14,16 +14,6 @@ use url::Url;
 
 use crate::{CSRF_TOKEN_COOKIE_NAME, CSRF_TOKEN_LENGTH};
 
-#[macro_export]
-macro_rules! unwrap_or_return {
-    ($expr:expr, $return_value:expr) => {
-        match $expr {
-            Ok(value) => value,
-            Err(_) => return $return_value,
-        }
-    };
-}
-
 pub fn validate_next_url(next: &str, config: &State<crate::Config>) -> anyhow::Result<Url> {
     if next.len() == 0 {
         bail!("`next` parameter is required");
@@ -93,13 +83,7 @@ pub fn jwt_duration_is_valid(token: &JwtToken) -> bool {
     let now_unix = chrono::Utc::now().timestamp() as u64;
 
     if let Some(expiry_unix_value) = claims.get("exp") {
-        let expiry_unix = match expiry_unix_value.as_u64() {
-            Some(value) => value,
-            None => {
-                return false;
-            }
-        };
-
+        let expiry_unix = unwrap_some_or!(expiry_unix_value.as_u64(), return false);
         if now_unix > expiry_unix {
             // Expired
             return false;
@@ -107,13 +91,7 @@ pub fn jwt_duration_is_valid(token: &JwtToken) -> bool {
     }
 
     if let Some(not_before_unix_value) = claims.get("nbf") {
-        let not_before_unix = match not_before_unix_value.as_u64() {
-            Some(value) => value,
-            None => {
-                return false;
-            }
-        };
-
+        let not_before_unix = unwrap_some_or!(not_before_unix_value.as_u64(), return false);
         if now_unix < not_before_unix {
             // Not valid yet
             return false;

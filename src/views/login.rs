@@ -9,7 +9,6 @@ use serde_json::json;
 
 use crate::database::AuthDatabase;
 use crate::models;
-use crate::unwrap_or_return;
 use crate::utils::{
     decode_jwt, generate_jwt, get_csrf_token, jwt_duration_is_valid, validate_next_url, CSRFToken,
 };
@@ -36,9 +35,10 @@ pub fn get_login(
     next: String,
 ) -> Result<LoginResponse, Template> {
     // Check invalid host
-    let url = unwrap_or_return!(
+    let url = unwrap_ok_or!(
         validate_next_url(&next, &config),
-        Err(Template::render("errors/host_denied", json!({})))
+        _,
+        return Err(Template::render("errors/host_denied", json!({})))
     );
 
     // Check existing session
@@ -74,9 +74,10 @@ pub async fn post_login(
     form: Form<LoginForm<'_>>,
 ) -> Result<LoginResponse, Template> {
     // Check invalid host
-    let url = unwrap_or_return!(
+    let url = unwrap_ok_or!(
         validate_next_url(&next, &config),
-        Err(Template::render("errors/host_denied", json!({})))
+        _,
+        return Err(Template::render("errors/host_denied", json!({})))
     );
 
     let csrf_token = get_csrf_token(cookies);
@@ -109,21 +110,23 @@ pub async fn post_login(
     println!("User '{}' tried logging in", form.username);
 
     let username = form.username.to_string();
-    let user = unwrap_or_return!(
+    let user = unwrap_ok_or!(
         database
             .run(move |conn| models::User::find_username(conn, &username))
             .await,
+        _,
         {
             eprintln!("User '{}' failed to login: No such user", form.username);
-            Ok(LoginResponse::Template(render_login_page(Some(
+            return Ok(LoginResponse::Template(render_login_page(Some(
                 ERROR_MSG_LOGIN_FAILED,
-            ))))
+            ))));
         }
     );
 
-    let hash = unwrap_or_return!(
+    let hash = unwrap_ok_or!(
         PasswordHash::new(&user.password),
-        Err(render_login_page(Some(
+        _,
+        return Err(render_login_page(Some(
             "Password corrupted, please reset your password",
         )))
     );
@@ -145,9 +148,10 @@ pub async fn post_login(
         ))));
     };
 
-    let jwt_token = match generate_jwt(config.jwt_private_key.as_bytes(), form.username) {
-        Ok(token) => token,
-        Err(error) => {
+    let jwt_token = unwrap_ok_or!(
+        generate_jwt(config.jwt_private_key.as_bytes(), form.username),
+        error,
+        {
             eprintln!(
                 "User '{}' failed to login: AuthToken generation failed: {:?}",
                 form.username, &error
@@ -157,7 +161,7 @@ pub async fn post_login(
                 "Auth token generation failed",
             ))));
         }
-    };
+    );
 
     // Set authtoken cookie with jwt content
     cookies.add(

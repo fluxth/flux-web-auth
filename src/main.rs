@@ -11,6 +11,9 @@ extern crate rocket;
 #[macro_use]
 extern crate diesel;
 
+#[macro_use]
+extern crate unwrap_or;
+
 #[cfg(not(debug_assertions))]
 #[macro_use]
 extern crate diesel_migrations;
