@@ -161,9 +161,7 @@ pub async fn post_login(
                 form.username, &error
             );
 
-            return Ok(LoginResponse::Template(render_login_page(Some(
-                "Auth token generation failed",
-            ))));
+            return Err(render_login_page(Some("Auth token generation failed")));
         }
     );
 
