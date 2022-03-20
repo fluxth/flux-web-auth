@@ -19,6 +19,7 @@ const ERROR_MSG_LOGIN_FAILED: &'static str = "Invalid username or password";
 struct LoginContext<'a> {
     next_host: Option<&'a str>,
     error: Option<&'a str>,
+    form: Option<&'a LoginForm<'a>>,
     csrf_token: &'a CSRFToken<'a>,
 }
 
@@ -53,12 +54,13 @@ pub fn get_login(
         LoginContext {
             next_host: url.host_str(),
             error: None,
+            form: None,
             csrf_token: &get_csrf_token(cookies),
         },
     )))
 }
 
-#[derive(FromForm)]
+#[derive(FromForm, Serialize)]
 pub struct LoginForm<'a> {
     username: &'a str,
     password: &'a str,
@@ -83,11 +85,13 @@ pub async fn post_login(
     let csrf_token = get_csrf_token(cookies);
     let render_login_page = |error: Option<&str>| {
         let token = &csrf_token;
+        let form = &form;
         Template::render(
             "pages/login",
             LoginContext {
                 next_host: url.host_str(),
                 error,
+                form: Some(form),
                 csrf_token: token,
             },
         )
