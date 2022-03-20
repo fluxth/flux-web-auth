@@ -165,6 +165,8 @@ pub async fn post_login(
         }
     );
 
+    println!("User '{}' successfully logged in", form.username);
+
     // Set authtoken cookie with jwt content
     cookies.add(
         Cookie::build(config.authtoken_cookie_name.clone(), jwt_token)
