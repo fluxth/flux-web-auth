@@ -32,7 +32,7 @@ jobs:
           context: .
           file: ./Dockerfile
           tags: ${{ github.event.repository.name }}:${{ github.ref_name }}
-          outputs: type=tar,dest=./docker-image.tar
+          outputs: type=docker,dest=./docker-image.tar
 
       - name: Pack Image
         run: gzip ./docker-image.tar
