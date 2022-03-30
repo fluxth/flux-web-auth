@@ -1,4 +1,13 @@
-# Phase 1: Build static assets
+# Phase 1: Get version from git describe
+FROM alpine:3.15.3 as version
+RUN apk add --no-cache git
+
+WORKDIR /version
+
+COPY .git ./.git
+RUN git describe | tr -d '\n' > version.txt
+
+# Phase 2: Build static assets
 FROM node:16.13 AS webpack-build
 WORKDIR /usr/app/src
 
@@ -7,7 +16,7 @@ RUN cd webpack && \
     yarn install --frozen-lockfile && \
     NODE_ENV=production yarn build
 
-# Phase 2: Build server binary
+# Phase 3: Build server binary
 FROM ekidd/rust-musl-builder:stable AS rust-build
 WORKDIR /usr/app/src
 
@@ -20,11 +29,11 @@ RUN mkdir .cargo && \
 
 COPY src ./src
 COPY migrations ./migrations
-COPY .git ./.git
+COPY --from=version /version/version.txt ./src/
 RUN cargo install --target x86_64-unknown-linux-musl --path . --root /usr/local/cargo && \
     strip /usr/local/cargo/bin/flux-web-auth
 
-# Phase 3: Runtime
+# Phase 4: Runtime
 FROM scratch AS runtime
 WORKDIR /usr/app/run
 

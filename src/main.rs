@@ -26,7 +26,7 @@ use rocket_dyn_templates::Template;
 use serde::Deserialize;
 
 const APP_NAME: &'static str = "flux-web-auth";
-const APP_VERSION: &'static str = git_version::git_describe!();
+const APP_VERSION: &'static str = include_str!("version.txt");
 
 const CSRF_TOKEN_COOKIE_NAME: &'static str = "csrftoken";
 const CSRF_TOKEN_LENGTH: usize = 32;
