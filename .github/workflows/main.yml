@@ -35,13 +35,13 @@ jobs:
           outputs: type=docker,dest=./docker-image.tar
 
       - name: Pack Image
-        run: gzip ./docker-image.tar
+        run: zstd ./docker-image.tar
 
       - name: Upload Image
         uses: actions/upload-artifact@v3
         with:
-          name: docker-image.tar.gz
-          path: ./docker-image.tar.gz
+          name: docker-image.tar.zst
+          path: ./docker-image.tar.zst
 
   release:
     if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/')
@@ -51,13 +51,13 @@ jobs:
       - name: Download Image
         uses: actions/download-artifact@v3
         with:
-          name: docker-image.tar.gz
+          name: docker-image.tar.zst
 
       - name: Rename Image
-        run: mv docker-image.tar.gz ${{ github.event.repository.name }}_${{ github.ref_name }}_image.tar.gz
+        run: mv docker-image.tar.zst ${{ github.event.repository.name }}_${{ github.ref_name }}_image.tar.zst
 
       - name: Create Release
         uses: softprops/action-gh-release@v1
         with:
           generate_release_notes: true
-          files: "*.tar.gz"
+          files: "*.tar.zst"
