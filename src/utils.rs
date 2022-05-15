@@ -46,7 +46,7 @@ pub fn generate_jwt(private_key: &[u8], username: &str) -> Result<String> {
     let private_key = openssl::ec::EcKey::private_key_from_pem(private_key)?;
     let key = PKeyWithDigest {
         key: PKey::from_ec_key(private_key)?,
-        digest: MessageDigest::sha384(),
+        digest: MessageDigest::sha256(),
     };
 
     let now = chrono::Utc::now();
@@ -72,7 +72,7 @@ pub fn decode_jwt(public_key: &[u8], jwt: &str) -> Result<JwtToken> {
     let public_key = openssl::ec::EcKey::public_key_from_pem(public_key)?;
     let key = PKeyWithDigest {
         key: PKey::from_ec_key(public_key)?,
-        digest: MessageDigest::sha384(),
+        digest: MessageDigest::sha256(),
     };
 
     Ok(VerifyWithKey::verify_with_key(jwt, &key)?)
