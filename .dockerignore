@@ -1,4 +1,7 @@
-target
-static
-Dockerfile
-**/node_modules
+**/Dockerfile
+
+**/target/
+
+**/node_modules/
+**/.svelte-kit/
+**/build/

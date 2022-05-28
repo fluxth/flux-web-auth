@@ -1,0 +1,16 @@
+:8080
+
+header -Server
+
+route /rpc/* {
+    uri strip_prefix /rpc
+    reverse_proxy localhost:10000
+}
+
+log {
+    output stdout
+    level DEBUG
+}
+
+reverse_proxy localhost:3000
+#reverse_proxy /rpc/* localhost:10000

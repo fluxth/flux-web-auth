@@ -9,14 +9,12 @@ end_of_line = lf
 insert_final_newline = true
 charset = utf-8
 indent_style = space
+max_line_length = 100
 indent_size = 4
 
-# Matches multiple files with brace expansion notation
-# Set default charset
-[*.{js,ts,html,html.tera}]
+[*.{json,js,cjs,mjs,ts,html,svelte}]
 indent_size = 2
 
-# Tab indentation (no size specified)
 [Makefile]
 indent_style = tab
 
