@@ -1,0 +1,10 @@
+:80
+
+header -Server
+
+route /rpc/* {
+    uri strip_prefix /rpc
+    reverse_proxy envoy:10000
+}
+
+reverse_proxy frontend:3000

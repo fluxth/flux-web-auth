@@ -1,12 +1,20 @@
-version: "3.9"
+version: "3.7"
 
 services:
   frontend:
-    build:
-      context: .
-      dockerfile: ./frontend/Dockerfile
+    image: flux-web-auth-frontend:next
 
   backend:
-    build:
-      context: .
-      dockerfile: ./backend/Dockerfile
+    image: flux-web-auth-backend:next
+
+  envoy:
+    image: envoyproxy/envoy-distroless:v1.22-latest
+    volumes:
+      - ./config/envoy.yaml:/etc/envoy/envoy.yaml
+
+  caddy:
+    image: caddy:2.5.1-alpine
+    volumes:
+      - ./config/Caddyfile:/etc/caddy/Caddyfile
+    ports:
+      - "30000:80"

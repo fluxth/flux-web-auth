@@ -26,7 +26,9 @@ RUN yarn build
 FROM node:${NODE_VERSION}-alpine as runtime
 
 WORKDIR /usr/app/run
-COPY --from=builder /usr/app/frontend ./
+COPY --from=builder /usr/app/frontend/package.json .
+COPY --from=builder /usr/app/frontend/build ./build
+COPY --from=builder /usr/app/frontend/node_modules ./node_modules
 
 EXPOSE 3000
 CMD ["node", "./build/index.js"]
