@@ -1,0 +1,105 @@
+name: Build Docker Images
+on:
+  push:
+    tags:
+      - '*'
+
+jobs:
+  build-frontend:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+        with:
+           fetch-depth: 0
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v1
+
+      - name: Cache Docker layers
+        uses: actions/cache@v2
+        with:
+          path: /tmp/.buildx-cache
+          key: ${{ runner.os }}-buildx-${{ github.sha }}
+          restore-keys: |
+            ${{ runner.os }}-buildx-
+
+      - name: Build Frontend Image
+        uses: docker/build-push-action@v2
+        with:
+          context: .
+          file: ./frontend/Dockerfile
+          tags: ${{ github.event.repository.name }}-frontend:${{ github.ref_name }}
+          outputs: type=docker,dest=./frontend-image.tar
+
+      - name: Pack Frontend Image
+        run: zstd ./frontend-image.tar
+
+      - name: Upload Frontend Image
+        uses: actions/upload-artifact@v3
+        with:
+          name: frontend-image.tar.zst
+          path: ./frontend-image.tar.zst
+
+  build-backend:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+        with:
+           fetch-depth: 0
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v1
+
+      - name: Cache Docker layers
+        uses: actions/cache@v2
+        with:
+          path: /tmp/.buildx-cache
+          key: ${{ runner.os }}-buildx-${{ github.sha }}
+          restore-keys: |
+            ${{ runner.os }}-buildx-
+
+      - name: Build Backend Image
+        uses: docker/build-push-action@v2
+        with:
+          context: .
+          file: ./backend/Dockerfile
+          tags: ${{ github.event.repository.name }}-backend:${{ github.ref_name }}
+          outputs: type=docker,dest=./backend-image.tar
+
+      - name: Pack Backend Image
+        run: zstd ./backend-image.tar
+
+      - name: Upload Backend Image
+        uses: actions/upload-artifact@v3
+        with:
+          name: backend-image.tar.zst
+          path: ./backend-image.tar.zst
+
+  release:
+    needs:
+      - build-frontend
+      - build-backend
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download Frontend Image
+        uses: actions/download-artifact@v3
+        with:
+          name: frontend-image.tar.zst
+
+      - name: Download Backend Image
+        uses: actions/download-artifact@v3
+        with:
+          name: backend-image.tar.zst
+
+      - name: Rename Images
+        run: |
+          mv frontend-image.tar.zst ${{ github.event.repository.name }}-frontend_${{ github.ref_name }}_image.tar.zst
+          mv backend-image.tar.zst ${{ github.event.repository.name }}-backend_${{ github.ref_name }}_image.tar.zst
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v1
+        with:
+          generate_release_notes: true
+          files: "*.tar.zst"
