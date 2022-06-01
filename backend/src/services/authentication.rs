@@ -1,7 +1,7 @@
 use tonic::{Request, Response, Status};
 
 use crate::proto::authentication_service_server;
-use crate::proto::{LoginRequest, LoginResult};
+use crate::proto::{LoginRequest, LoginResult, StatusRequest, StatusResult};
 
 pub use crate::proto::authentication_service_server::AuthenticationServiceServer;
 
@@ -13,10 +13,25 @@ impl authentication_service_server::AuthenticationService for AuthenticationServ
     async fn login(&self, request: Request<LoginRequest>) -> Result<Response<LoginResult>, Status> {
         println!("got login: {:?}", request.metadata());
 
-        let reply = LoginResult {
+        let result = LoginResult {
             result: "yes".to_owned(),
         };
 
-        Ok(Response::new(reply))
+        Ok(Response::new(result))
+    }
+
+    async fn status(
+        &self,
+        request: Request<StatusRequest>,
+    ) -> Result<Response<StatusResult>, Status> {
+        let metadata = request.metadata();
+        println!("got status: {:?}", metadata);
+
+        let result = StatusResult {
+            logged_in: true,
+            display_name: "flux".to_owned(),
+        };
+
+        Ok(Response::new(result))
     }
 }
