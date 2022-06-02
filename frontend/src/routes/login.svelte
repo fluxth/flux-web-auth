@@ -29,6 +29,10 @@
   export let nextService: string;
 </script>
 
+<svelte:head>
+  <title>Login to {nextService} - flux.ci</title>
+</svelte:head>
+
 <Card>
   <div
     class:hidden={!loading}

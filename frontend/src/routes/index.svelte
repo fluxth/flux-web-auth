@@ -6,6 +6,10 @@
   $: nextUrl = encodeURIComponent($page.url.href);
 </script>
 
+<svelte:head>
+  <title>flux.ci Authentication Service</title>
+</svelte:head>
+
 <Card>
   <div class="text-center mb-6">
     <HeaderIcon width="50" class="mx-auto mb-4 fill-stone-400" />
