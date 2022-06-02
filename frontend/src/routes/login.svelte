@@ -1,11 +1,13 @@
 <script context="module" lang="ts">
   export function load({ url }) {
     const next = url.searchParams.get("continue");
+    const back = url.searchParams.get("back");
     if (!next) return { status: 400, error: "Invalid parameters" };
 
     return {
       props: {
         nextService: "fluxsearch",
+        backUrl: back,
       },
     };
   }
@@ -14,6 +16,7 @@
 <script lang="ts">
   import Card from "../components/Card.svelte";
   import HeaderIcon from "eva-icons/outline/svg/lock-outline.svg";
+  import BackIcon from "eva-icons/outline/svg/arrow-back-outline.svg";
   import { fade, fly } from "svelte/transition";
 
   enum LoginStage {
@@ -30,6 +33,7 @@
   };
 
   export let nextService: string;
+  export let backUrl: string | undefined;
 </script>
 
 <svelte:head>
@@ -50,6 +54,11 @@
     class="relative transition"
     on:submit|preventDefault={() => {}}
   >
+    {#if backUrl && stage == LoginStage.Identity}
+      <a rel="external" href={backUrl} class="absolute -ml-3 -mt-2" transition:fade>
+        <BackIcon width="30" class="fill-stone-400 hover:fill-stone-500 transition" />
+      </a>
+    {/if}
     <div class="text-center mb-6">
       <HeaderIcon width="50" class="mx-auto mb-4 fill-teal-700" />
 
@@ -72,7 +81,7 @@
     </div>
     <div class="relative transition-[height]" style="height:{height}px">
       {#if stage == LoginStage.Identity}
-        <div class="absolute top-0" bind:clientHeight={height} transition:fade>
+        <div class="absolute top-0 w-full" bind:clientHeight={height} transition:fade>
           <div class="mb-6">
             <input
               autofocus
@@ -106,7 +115,7 @@
         </div>
       {:else if stage == LoginStage.Password}
         <div
-          class="absolute top-0"
+          class="absolute top-0 w-full"
           bind:clientHeight={height}
           in:fly={{ x: 200, delay: 400 }}
           out:fade
