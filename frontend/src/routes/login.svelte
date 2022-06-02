@@ -14,6 +14,7 @@
 <script lang="ts">
   import Card from "../components/Card.svelte";
   import HeaderIcon from "eva-icons/outline/svg/lock-outline.svg";
+  import { fade } from "svelte/transition";
 
   enum LoginStage {
     Identity,
@@ -34,13 +35,19 @@
 </svelte:head>
 
 <Card>
-  <div
-    class:hidden={!loading}
-    class="absolute h-2 w-full -mt-8 -ml-8 bg-gradient-to-r from-teal-900 to-teal-600
-      animate-pulse duration-75 transition opacity-80 rounded-tl-md rounded-tr-md"
-  />
-  <form class:opacity-30={loading} class:pointer-events-none={loading} class="relative transition"
-  on:submit|preventDefault={() => {}}>
+  {#if loading}
+    <div
+      transition:fade={{ duration: 200 }}
+      class="absolute h-2 w-full -mt-8 -ml-8 bg-gradient-to-r from-teal-900 to-teal-600
+        animate-pulse duration-75 opacity-80 rounded-tl-md rounded-tr-md"
+    />
+  {/if}
+  <form
+    class:opacity-30={loading}
+    class:pointer-events-none={loading}
+    class="relative transition"
+    on:submit|preventDefault={() => {}}
+  >
     <div class="text-center mb-6">
       <HeaderIcon width="50" class="mx-auto mb-4 fill-teal-700" />
 
@@ -67,7 +74,7 @@
           autofocus
           type="text"
           class="w-full px-3 py-2 font-light border border-stone-300 rounded-lg shadow-inner
-          focus:shadow-teal-700/20 hover:border-teal-500 focus:border-teal-700 focus:transition
+          focus:shadow-teal-700/20 hover:border-teal-500 focus:border-teal-700 transition
           outline-none"
           placeholder="Email or Username"
           bind:value={data.username}
@@ -77,7 +84,7 @@
           autofocus
           type="password"
           class="w-full px-3 py-2 font-light border border-stone-300 rounded-lg shadow-inner
-          focus:shadow-teal-700/20 hover:border-teal-500 focus:border-teal-700 focus:transition
+          focus:shadow-teal-700/20 hover:border-teal-500 focus:border-teal-700 transition
           outline-none"
           placeholder="Password"
         />
