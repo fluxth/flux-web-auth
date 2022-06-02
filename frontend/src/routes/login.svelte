@@ -14,7 +14,7 @@
 <script lang="ts">
   import Card from "../components/Card.svelte";
   import HeaderIcon from "eva-icons/outline/svg/lock-outline.svg";
-  import { fade } from "svelte/transition";
+  import { fade, fly } from "svelte/transition";
 
   enum LoginStage {
     Identity,
@@ -23,10 +23,12 @@
 
   let stage: LoginStage = LoginStage.Identity;
   let loading = false;
+  let height = 102;
 
   let data = {
     username: "",
   };
+
   export let nextService: string;
 </script>
 
@@ -68,66 +70,89 @@
         </a>
       {/if}
     </div>
-    <div class="mb-6">
+    <div class="relative transition-[height]" style="height:{height}px">
       {#if stage == LoginStage.Identity}
-        <input
-          autofocus
-          type="text"
-          class="w-full px-3 py-2 font-light border border-stone-300 rounded-lg shadow-inner
-          focus:shadow-teal-700/20 hover:border-teal-500 focus:border-teal-700 transition
-          outline-none"
-          placeholder="Email or Username"
-          bind:value={data.username}
-        />
-      {:else if stage == LoginStage.Password}
-        <input
-          autofocus
-          type="password"
-          class="w-full px-3 py-2 font-light border border-stone-300 rounded-lg shadow-inner
-          focus:shadow-teal-700/20 hover:border-teal-500 focus:border-teal-700 transition
-          outline-none"
-          placeholder="Password"
-        />
-
-        <!--<div class="mt-2">
-          <label class="text-sm text-stone-600 cursor-pointer">
+        <div class="absolute top-0" bind:clientHeight={height} transition:fade>
+          <div class="mb-6">
             <input
-              class="form-check-input appearance-none h-4 w-4 border border-stone-300 rounded-sm shadow-inner
-            checked:bg-teal-700 checked:border-teal-800 focus:outline-none transition duration-200
-            mt-1 align-top bg-no-repeat bg-center bg-contain mr-1 cursor-pointer rounded"
-              type="checkbox"
+              autofocus
+              type="text"
+              class="w-full px-3 py-2 font-light border border-stone-300 rounded-lg shadow-inner
+              focus:shadow-teal-700/20 hover:border-teal-500 focus:border-teal-700 transition
+              outline-none"
+              placeholder="Email or Username"
+              bind:value={data.username}
             />
-            Remember me
-          </label>
-        </div>-->
-      {/if}
-    </div>
-    <div class="flex flex-row justify-between items-center text-sm">
-      {#if stage == LoginStage.Identity}
-        <a
-          href="/register"
-          class="text-teal-800 -ml-2 p-2 hover:bg-neutral-100 hover:text-teal-700 rounded-md transition"
-          >Create an account</a
-        >
+          </div>
+          <div class="flex flex-row justify-between items-center text-sm">
+            <a
+              href="/register"
+              class="text-teal-800 -ml-2 p-2 hover:bg-neutral-100 hover:text-teal-700 rounded-md transition"
+              >Create an account</a
+            >
+            <button
+              type="submit"
+              class="px-6 py-2 text-white bg-teal-700 shadow hover:shadow-lg hover:bg-teal-800
+            active:bg-teal-900 rounded-md transition"
+              on:click={() => {
+                loading = true;
+                setTimeout(() => {
+                  stage = LoginStage.Password;
+                  loading = false;
+                }, 1000);
+              }}>Next</button
+            >
+          </div>
+        </div>
       {:else if stage == LoginStage.Password}
-        <a
-          href="/forget"
-          class="text-teal-800 -ml-2 p-2 hover:bg-neutral-100 hover:text-teal-700 rounded-md transition"
-          >Forgot password?</a
+        <div
+          class="absolute top-0"
+          bind:clientHeight={height}
+          in:fly={{ x: 200, delay: 400 }}
+          out:fade
         >
+          <div class="mb-6">
+            <input
+              autofocus
+              type="password"
+              class="w-full px-3 py-2 font-light border border-stone-300 rounded-lg shadow-inner
+              focus:shadow-teal-700/20 hover:border-teal-500 focus:border-teal-700 transition
+              outline-none"
+              placeholder="Password"
+            />
+            <!--<div class="mt-2">
+              <label class="text-sm text-stone-600 cursor-pointer">
+                <input
+                  class="form-check-input appearance-none h-4 w-4 border border-stone-300 rounded-sm shadow-inner
+                checked:bg-teal-700 checked:border-teal-800 focus:outline-none transition duration-200
+                mt-1 align-top bg-no-repeat bg-center bg-contain mr-1 cursor-pointer rounded"
+                  type="checkbox"
+                />
+                Remember me
+              </label>
+            </div>-->
+          </div>
+          <div class="flex flex-row justify-between items-center text-sm">
+            <a
+              href="/forget"
+              class="text-teal-800 -ml-2 p-2 hover:bg-neutral-100 hover:text-teal-700 rounded-md transition"
+              >Forgot password?</a
+            >
+            <button
+              type="submit"
+              class="px-6 py-2 text-white bg-teal-700 shadow hover:shadow-lg hover:bg-teal-800
+            active:bg-teal-900 rounded-md transition"
+              on:click={() => {
+                loading = true;
+                setTimeout(() => {
+                  stage = LoginStage.Password;
+                  loading = false;
+                }, 1000);
+              }}>Next</button
+            >
+          </div>
+        </div>
       {/if}
-      <button
-        type="submit"
-        class="px-6 py-2 text-white bg-teal-700 shadow hover:shadow-lg hover:bg-teal-800
-      active:bg-teal-900 rounded-md transition"
-        on:click={() => {
-          loading = true;
-          setTimeout(() => {
-            stage = LoginStage.Password;
-            loading = false;
-          }, 1000);
-        }}>Next</button
-      >
     </div>
     <!--<footer class="w-full mt-6 text-neutral-500 text-center text-xs font-light">
       &copy; 2022, flux.ci
