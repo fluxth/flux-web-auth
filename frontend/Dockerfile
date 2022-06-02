@@ -19,7 +19,6 @@ COPY frontend/package.json frontend/yarn.lock frontend/svelte.config.js ./
 RUN yarn install --immutable --immutable-cache --check-cache
 
 COPY ./frontend ./
-COPY ./scripts ../scripts
 COPY ./proto ../proto
 RUN mkdir -p proto && \
     yarn build
