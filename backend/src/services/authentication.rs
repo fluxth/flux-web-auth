@@ -1,7 +1,8 @@
 use tonic::{Request, Response, Status};
 
 use crate::proto::authentication_service_server;
-use crate::proto::{LoginRequest, LoginResult, StatusRequest, StatusResult};
+use crate::proto::status_response;
+use crate::proto::{StatusResponse, StatusResult};
 
 pub use crate::proto::authentication_service_server::AuthenticationServiceServer;
 
@@ -10,28 +11,17 @@ pub struct AuthenticationService {}
 
 #[tonic::async_trait]
 impl authentication_service_server::AuthenticationService for AuthenticationService {
-    async fn login(&self, request: Request<LoginRequest>) -> Result<Response<LoginResult>, Status> {
-        println!("got login: {:?}", request.metadata());
-
-        let result = LoginResult {
-            result: "yes".to_owned(),
-        };
-
-        Ok(Response::new(result))
-    }
-
-    async fn status(
-        &self,
-        request: Request<StatusRequest>,
-    ) -> Result<Response<StatusResult>, Status> {
+    async fn status(&self, request: Request<()>) -> Result<Response<StatusResponse>, Status> {
         let metadata = request.metadata();
         println!("got status: {:?}", metadata);
 
-        let result = StatusResult {
-            logged_in: true,
-            display_name: "flux".to_owned(),
+        let response = StatusResponse {
+            response: Some(status_response::Response::Result(StatusResult {
+                logged_in: false,
+                display_name: "".into(),
+            })),
         };
 
-        Ok(Response::new(result))
+        Ok(Response::new(response))
     }
 }

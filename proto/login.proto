@@ -1,0 +1,44 @@
+syntax = "proto3";
+
+import "common.proto";
+
+package flux.web.auth;
+
+service LoginService {
+    rpc Identity (IdentityRequest) returns (IdentityResponse) {}
+    rpc Password (PasswordRequest) returns (PasswordResponse) {}
+}
+
+message IdentityRequest {
+    string username = 1;
+    string continue_url = 2;
+    string back_url = 3;
+}
+
+message IdentityResponse {
+    oneof response {
+        IdentityResult result = 1;
+        Error error = 2;
+    }
+}
+
+message IdentityResult {
+    bytes identifier = 1;
+    string display_name = 2;
+}
+
+message PasswordRequest {
+    bytes identifier = 1;
+    string password = 2;
+}
+
+message PasswordResponse {
+    oneof response {
+        PasswordResult result = 1;
+        Error error = 2;
+    }
+}
+
+message PasswordResult {
+    string authtoken = 1;
+}
