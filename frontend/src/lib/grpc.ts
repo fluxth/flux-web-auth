@@ -16,9 +16,8 @@ export async function transport(): Promise<RpcTransport> {
 }
 
 export function metadata(session: any, additionalMetadata?: object) {
-  let meta = {
-    authtoken: session.authtoken,
-  };
+  let meta = {};
+  if (session.authtoken) meta = { authtoken: session.authtoken };
   if (additionalMetadata) meta = { ...meta, ...additionalMetadata };
 
   return { meta };
