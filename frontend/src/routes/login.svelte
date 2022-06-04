@@ -6,6 +6,7 @@
 
     return {
       props: {
+        currentHost: url.host,
         nextService: "fluxsearch",
         backUrl: back,
       },
@@ -32,8 +33,11 @@
     username: "",
   };
 
+  export let currentHost: string;
   export let nextService: string;
   export let backUrl: string | undefined;
+
+  $: backUrlIsSameHost = new URL(backUrl).host === currentHost;
 </script>
 
 <svelte:head>
@@ -55,7 +59,12 @@
     on:submit|preventDefault={() => {}}
   >
     {#if backUrl && stage == LoginStage.Identity}
-      <a rel="external" href={backUrl} class="absolute -ml-3 -mt-2" transition:fade>
+      <a
+        rel={backUrlIsSameHost ? null : "external"}
+        href={backUrl}
+        class="absolute -ml-3 -mt-2"
+        transition:fade|local
+      >
         <BackIcon width="30" class="fill-stone-400 hover:fill-stone-500 transition" />
       </a>
     {/if}
@@ -81,7 +90,7 @@
     </div>
     <div class="relative transition-[height]" style="height:{height}px">
       {#if stage == LoginStage.Identity}
-        <div class="absolute top-0 w-full" bind:clientHeight={height} transition:fade>
+        <div class="absolute top-0 w-full" bind:clientHeight={height} transition:fade|local>
           <div class="mb-6">
             <input
               autofocus
@@ -118,7 +127,7 @@
           class="absolute top-0 w-full"
           bind:clientHeight={height}
           in:fly={{ x: 200, delay: 400 }}
-          out:fade
+          out:fade|local
         >
           <div class="mb-6">
             <input
