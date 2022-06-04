@@ -1,12 +1,18 @@
 <script lang="ts" context="module">
   import type { Load } from "@sveltejs/kit";
-  import { transport } from "$lib/grpc";
-
+  import { transport, metadata } from "$lib/grpc";
   import { AuthenticationServiceClient } from "../../proto/authentication.client";
 
-  export const load: Load = async () => {
+  export const load: Load = async ({ session }) => {
     const client = new AuthenticationServiceClient(await transport());
-    const data = (await client.status({})).response;
+    const data = (
+      await client.status(
+        {},
+        {
+          ...metadata(session),
+        }
+      )
+    ).response;
 
     switch (data.response.oneofKind) {
       case "result":
