@@ -3,6 +3,7 @@ syntax = "proto3";
 package flux.web.auth;
 
 message Error {
-    uint32 code = 1;
+    uint32 error_code = 1;
     string message = 2;
+    uint32 http_response_code = 3; // Use 0 for default
 }

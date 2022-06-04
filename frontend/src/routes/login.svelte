@@ -1,17 +1,58 @@
 <script context="module" lang="ts">
-  export function load({ url }) {
-    const next = url.searchParams.get("continue");
-    const back = url.searchParams.get("back");
-    if (!next) return { status: 400, error: "Invalid parameters" };
+  import type { Load } from "@sveltejs/kit";
+  import { transport, metadata } from "$lib/grpc";
+  import { LoginServiceClient } from "../../proto/login.client";
 
-    return {
-      props: {
-        currentHost: url.host,
-        nextService: "fluxsearch",
-        backUrl: back,
-      },
+  export const load: Load = async ({ url, session }) => {
+    const continueUrl = url.searchParams.get("continue");
+    const backUrl = url.searchParams.get("back");
+    if (!continueUrl) return { status: 400, error: "Invalid parameters" };
+
+    const client = new LoginServiceClient(await transport());
+    const data = (
+      await client.initiate(
+        {
+          continueUrl,
+          backUrl,
+        },
+        {
+          ...metadata(session),
+        }
+      )
+    ).response;
+
+    const props = {
+      currentHost: url.host,
+      backUrl,
     };
-  }
+
+    const defaultError = { error: "Unexpected server response" };
+
+    switch (data.response.oneofKind) {
+      case "result":
+        const { result } = data.response.result;
+        switch (result.oneofKind) {
+          case "data":
+            return { props: { ...result.data, ...props } };
+
+          case "redirectUrl":
+            return { status: 307, redirect: result.redirectUrl };
+
+          default:
+            return defaultError;
+        }
+
+      case "error":
+        let status = data.response.error.httpResponseCode;
+        if (status < 100) status = 500;
+
+        return { status, error: data.response.error.message };
+
+      default:
+        console.error("Error", data);
+        return defaultError;
+    }
+  };
 </script>
 
 <script lang="ts">
@@ -34,14 +75,14 @@
   };
 
   export let currentHost: string;
-  export let nextService: string;
+  export let nextServiceName: string;
   export let backUrl: string | undefined;
 
   $: backUrlIsSameHost = new URL(backUrl).host === currentHost;
 </script>
 
 <svelte:head>
-  <title>Login to {nextService} - flux.ci</title>
+  <title>Login to {nextServiceName} - flux.ci</title>
 </svelte:head>
 
 <Card>
@@ -74,7 +115,7 @@
       {#if stage == LoginStage.Identity}
         <h1 class="text-xl font-medium">Sign in to continue</h1>
         <p class="text-sm text-stone-500 dark:text-stone-400 font-light">
-          <span class="font-medium">{nextService}</span> needs authentication
+          <span class="font-medium">{nextServiceName}</span> needs authentication
         </p>
       {:else if stage == LoginStage.Password}
         <h1 class="text-xl font-medium">Hi, {data.username}</h1>
