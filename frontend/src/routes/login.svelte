@@ -22,7 +22,7 @@
     ).response;
 
     const props = {
-      currentHost: url.host,
+      currentUrl: url,
       backUrl,
     };
 
@@ -72,13 +72,22 @@
 
   let data = {
     username: "",
+    password: "",
   };
 
-  export let currentHost: string;
+  export let currentUrl: URL;
   export let nextServiceName: string;
   export let backUrl: string | undefined;
 
-  $: backUrlIsSameHost = new URL(backUrl).host === currentHost;
+  let backUrlIsSameHost: boolean = false;
+
+  try {
+    const parsedBackUrl = new URL(backUrl);
+    backUrlIsSameHost =
+      parsedBackUrl.host === currentUrl.host && parsedBackUrl.protocol === currentUrl.protocol;
+  } catch {
+    backUrlIsSameHost = false;
+  }
 </script>
 
 <svelte:head>
