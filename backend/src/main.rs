@@ -1,16 +1,29 @@
-use tonic::transport::Server;
-
+mod config;
+mod services;
 pub mod proto {
     tonic::include_proto!("flux.web.auth");
 }
 
-mod services;
+use config::Config;
 use services::authentication::*;
 use services::login::*;
 
+use once_cell::sync::OnceCell;
+use tonic::transport::Server;
+
+pub static CONFIG: OnceCell<Config> = OnceCell::new();
+
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let addr = "[::]:9090".parse().unwrap();
+    let config = match envy::from_env::<Config>() {
+        Ok(config) => {
+            CONFIG.set(config).unwrap();
+            CONFIG.get().unwrap()
+        }
+        Err(error) => panic!("fail to parse config: {}", error),
+    };
+
+    let addr = format!("{}:{}", config.host, config.port).parse().unwrap();
 
     let authentication_service = AuthenticationService::default();
     let login_service = LoginService::default();
