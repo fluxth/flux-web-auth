@@ -1,7 +1,8 @@
 use tonic::{Request, Response, Status};
 
+use crate::error::Error;
+
 use crate::proto::login_service_server;
-use crate::proto::Error as ProtoError;
 use crate::proto::{identity_response, initiate_response, initiate_result, password_response};
 use crate::proto::{IdentityRequest, IdentityResponse, IdentityResult};
 use crate::proto::{InitiateData, InitiateRequest, InitiateResponse, InitiateResult};
