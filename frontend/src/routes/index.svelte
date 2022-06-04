@@ -45,7 +45,12 @@
 <Card>
   <div class="text-center mb-6">
     {#if loggedIn}
-      <LoggedInHeaderIcon width="50" class="mx-auto mb-4 fill-teal-700" />
+      <div
+        class="inline-block mx-auto mb-3 p-3 bg-gradient-to-tl from-teal-800 to-teal-400
+        rounded-full drop-shadow"
+      >
+        <LoggedInHeaderIcon width="50" class="fill-stone-100" />
+      </div>
       <h1 class="text-xl font-medium">Hi, {displayName}</h1>
       <p class="text-stone-500 dark:text-stone-400 font-light">You are logged in!</p>
     {:else}
