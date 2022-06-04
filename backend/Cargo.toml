@@ -10,7 +10,6 @@ build = "build.rs"
 tokio = { version = "1.18.2", features = ["rt-multi-thread"] }
 prost = "0.10.4"
 tonic = "0.7.2"
-tonic-web = "0.3.0"
 
 [build-dependencies]
 tonic-build = "0.7.2"
