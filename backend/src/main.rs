@@ -1,6 +1,7 @@
 mod config;
 mod error;
 mod services;
+mod url;
 mod utils;
 pub mod proto {
     tonic::include_proto!("flux.web.auth");

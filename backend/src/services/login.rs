@@ -1,6 +1,7 @@
 use tonic::{Request, Response, Status};
 
 use crate::error::Error;
+use crate::url::validate_redirect_url;
 
 use crate::proto::login_service_server;
 use crate::proto::{identity_response, initiate_response, initiate_result, password_response};
@@ -22,25 +23,16 @@ impl login_service_server::LoginService for LoginService {
         let metadata = request.metadata();
         println!("got initiate: {:?}", metadata);
 
-        let request_data = request.into_inner();
-        let continue_url = request_data.continue_url;
-        let back_url = request_data.back_url;
-
         let response = InitiateResponse {
-            response: Some(initiate_response::Response::Result(InitiateResult {
-                //result: Some(initiate_result::Result::RedirectUrl(continue_url)),
-                result: Some(initiate_result::Result::Data(InitiateData {
-                    next_service_name: "Service Name".into(),
+            response: match initiate_process(request).await {
+                Ok(result) => Some(initiate_response::Response::Result(InitiateResult {
+                    result: Some(result),
                 })),
-            })),
-            /*response: Some(initiate_response::Response::Error(ProtoError {
-                error_code: 9999,
-                message: "Test".into(),
-                http_response_code: 0,
-            })),*/
+                Err(error) => Some(initiate_response::Response::Error(error)),
+            },
         };
 
-        return Ok(Response::new(response));
+        Ok(Response::new(response))
     }
 
     async fn identity(
@@ -75,4 +67,35 @@ impl login_service_server::LoginService for LoginService {
 
         Ok(Response::new(response))
     }
+}
+
+async fn initiate_process(
+    request: Request<InitiateRequest>,
+) -> Result<initiate_result::Result, Error> {
+    let token = crate::utils::get_token(&request);
+
+    // Validate redirect urls
+    let request_data = request.into_inner();
+    let continue_url = request_data.continue_url;
+    let back_url = {
+        if request_data.back_url == "" {
+            None
+        } else {
+            Some(request_data.back_url)
+        }
+    };
+
+    validate_redirect_url(&continue_url)?;
+    if let Some(back_url) = back_url {
+        validate_redirect_url(&back_url)?;
+    }
+
+    // Has session?
+    if token.is_some() {
+        return Ok(initiate_result::Result::RedirectUrl(continue_url));
+    }
+
+    Ok(initiate_result::Result::Data(InitiateData {
+        next_service_name: "fluxauth".into(),
+    }))
 }
