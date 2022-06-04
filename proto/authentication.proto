@@ -6,7 +6,7 @@ import "common.proto";
 package flux.web.auth;
 
 service AuthenticationService {
-    rpc Status (google.protobuf.Empty) returns (StatusResponse) {}
+    rpc Status (google.protobuf.Empty) returns (StatusResponse);
 }
 
 message StatusResponse {

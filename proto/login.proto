@@ -5,9 +5,9 @@ import "common.proto";
 package flux.web.auth;
 
 service LoginService {
-    rpc Initiate (InitiateRequest) returns (InitiateResponse) {}
-    rpc Identity (IdentityRequest) returns (IdentityResponse) {}
-    rpc Password (PasswordRequest) returns (PasswordResponse) {}
+    rpc Initiate (InitiateRequest) returns (InitiateResponse);
+    rpc Identity (IdentityRequest) returns (IdentityResponse);
+    rpc Password (PasswordRequest) returns (PasswordResponse);
 }
 
 message InitiateRequest {
