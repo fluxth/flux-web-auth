@@ -90,7 +90,12 @@
     </div>
     <div class="relative transition-[height]" style="height:{height}px">
       {#if stage == LoginStage.Identity}
-        <div class="absolute top-0 w-full" bind:clientHeight={height} transition:fade|local>
+        <div
+          class="absolute top-0 w-full"
+          bind:clientHeight={height}
+          in:fly|local={{ x: 200, delay: 400 }}
+          out:fade|local
+        >
           <div class="mb-6">
             <input
               autofocus
@@ -126,7 +131,7 @@
         <div
           class="absolute top-0 w-full"
           bind:clientHeight={height}
-          in:fly={{ x: 200, delay: 400 }}
+          in:fly|local={{ x: 200, delay: 400 }}
           out:fade|local
         >
           <div class="mb-6">
