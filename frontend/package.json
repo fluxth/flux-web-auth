@@ -14,7 +14,7 @@
     "check:watch": "svelte-check --tsconfig ./tsconfig.json --watch",
     "lint": "prettier --check --plugin-search-dir=. . && eslint .",
     "format": "prettier --write --plugin-search-dir=. .",
-    "build:proto": "npx protoc --ts_out ./proto --proto_path ../proto ../proto/*.proto",
+    "build:proto": "mkdir -p ./proto && npx protoc --ts_out ./proto --proto_path ../proto ../proto/*.proto",
     "clean:proto": "rm ./proto/*"
   },
   "devDependencies": {

@@ -20,8 +20,7 @@ RUN yarn install --immutable --immutable-cache --check-cache
 
 COPY ./frontend ./
 COPY ./proto ../proto
-RUN mkdir -p proto && \
-    yarn build
+RUN yarn build
 
 FROM node:${NODE_VERSION}-alpine as runtime
 
