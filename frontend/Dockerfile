@@ -2,7 +2,6 @@
 ARG NODE_VERSION=18.2.0
 
 FROM node:${NODE_VERSION} as builder
-RUN apt-get update && apt-get install -y protobuf-compiler && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /usr/app/frontend
 COPY frontend/package.json frontend/yarn.lock frontend/svelte.config.js ./
