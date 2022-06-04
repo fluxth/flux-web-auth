@@ -1,6 +1,7 @@
 mod config;
 mod error;
 mod services;
+mod utils;
 pub mod proto {
     tonic::include_proto!("flux.web.auth");
 }
@@ -13,6 +14,7 @@ use once_cell::sync::OnceCell;
 use tonic::transport::Server;
 
 pub static CONFIG: OnceCell<Config> = OnceCell::new();
+pub const TOKEN_KEY: &'static str = "authtoken";
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
