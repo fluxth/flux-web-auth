@@ -3,8 +3,6 @@ on:
   push:
     tags:
       - '*'
-    branches:
-      - 'main'
 
 jobs:
   build:
@@ -44,7 +42,6 @@ jobs:
           path: ./docker-image.tar.zst
 
   release:
-    if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/')
     needs: build
     runs-on: ubuntu-latest
     steps:
