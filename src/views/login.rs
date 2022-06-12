@@ -174,7 +174,7 @@ pub async fn post_login(
             .path("/")
             .secure(true)
             .http_only(true)
-            .max_age(time::Duration::days(7))
+            .max_age(rocket::time::Duration::days(7))
             .same_site(rocket::http::SameSite::Strict)
             .finish(),
     );
