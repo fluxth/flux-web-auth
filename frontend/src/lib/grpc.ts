@@ -9,6 +9,7 @@ export async function transport(): Promise<RpcTransport> {
     const { GrpcTransport } = await import("@protobuf-ts/grpc-transport");
     const { ChannelCredentials } = await import("@grpc/grpc-js");
     return new GrpcTransport({
+      // FIXME: Don't hardcode
       host: dev ? "localhost:9090" : "backend:9090",
       channelCredentials: ChannelCredentials.createInsecure(),
     });
