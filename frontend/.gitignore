@@ -8,3 +8,12 @@ node_modules
 !.env.example
 /proto
 yarn-error.log
+
+# yarn v2
+.pnp.*
+.yarn/*
+!.yarn/patches
+!.yarn/plugins
+!.yarn/releases
+!.yarn/sdks
+!.yarn/versions
