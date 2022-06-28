@@ -3,6 +3,8 @@ version: "3.7"
 services:
   frontend:
     image: flux-web-auth-frontend:next
+    env_file:
+      - frontend.env
 
   backend:
     image: flux-web-auth-backend:next
