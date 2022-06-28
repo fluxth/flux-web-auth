@@ -1,7 +1,10 @@
 #!/bin/bash
 
+BASEPATH=$(dirname "$0")
+TEMPPATH="${BASEPATH}/../temp"
+
 export ALLOWED_URLS=http://localhost:8080
-export JWT_PRIVATE_KEY='-----BEGIN PRIVATE KEY-----\nMIGHAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBG0wawIBAQQglBnO+qn+RecAQ31T\njBklNu+AwiFN5eVHBFbnjecmMryhRANCAARGpVef6j7rMQ6lYSwbDkKwH7B3zM6P\nG7S4BIamIY/7Bh9xzW6fIzFxK1sPNSNG45tjwNqVoIn38npSuRCRkG1n\n-----END PRIVATE KEY-----'
-export JWT_PUBLIC_KEY='-----BEGIN PUBLIC KEY-----\nMFYwEAYHKoZIzj0CAQYFK4EEAAoDQgAEPlAK9ajkjw3TG99GQhTfzpCKagL3EyQe\nGgPeq4G4L0HF8az8gfuUi3R9G4Y5Q1LxU4r4DlLrjdNTeu+pDjRlZQ==\n-----END PUBLIC KEY-----'
+export JWT_PRIVATE_KEY=$(cat "${TEMPPATH}/private_key.pem")
+export JWT_PUBLIC_KEY=$(cat "${TEMPPATH}/public_key.pem")
 
 cargo watch -x run
