@@ -37,7 +37,7 @@ fn status_process(token: Option<Cow<str>>) -> Result<StatusResult, Error> {
         .get()
         .ok_or(format_err!("Config not initialized"))?;
 
-    let not_logged_in_result = StatusResult {
+    let not_logged_in_result = || StatusResult {
         logged_in: false,
         display_name: "".into(),
     };
@@ -48,7 +48,7 @@ fn status_process(token: Option<Cow<str>>) -> Result<StatusResult, Error> {
             err,
             {
                 println!("jwt verify failed: {:?}", err);
-                return Ok(not_logged_in_result);
+                return Ok(not_logged_in_result());
             }
         );
 
@@ -60,10 +60,10 @@ fn status_process(token: Option<Cow<str>>) -> Result<StatusResult, Error> {
                 display_name: sub.into(),
             })
         } else {
-            Ok(not_logged_in_result)
+            Ok(not_logged_in_result())
         }
     } else {
         // No token found, not logged in
-        Ok(not_logged_in_result)
+        Ok(not_logged_in_result())
     }
 }
