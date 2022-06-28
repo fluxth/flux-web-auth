@@ -12,7 +12,7 @@ COPY backend ./backend
 COPY proto ./proto
 
 WORKDIR /usr/app/backend
-RUN cargo build --release --target x86_64-unknown-linux-musl
+RUN cargo build --release --locked --target x86_64-unknown-linux-musl
 RUN strip "./target/x86_64-unknown-linux-musl/release/flux-web-auth-backend"
 
 FROM scratch as runtime
