@@ -4,7 +4,8 @@ ARG NODE_VERSION=18.2.0
 FROM node:${NODE_VERSION} as builder
 
 WORKDIR /usr/app/frontend
-COPY frontend/package.json frontend/yarn.lock frontend/svelte.config.js ./
+COPY frontend/package.json frontend/yarn.lock frontend/.yarnrc.yml frontend/svelte.config.js ./
+COPY frontend/.yarn ./.yarn
 RUN yarn install --immutable --immutable-cache --check-cache
 
 COPY ./frontend ./
