@@ -3,6 +3,7 @@
   import { page } from "$app/stores";
 
   export let showHelp: boolean = true;
+  let year = new Date().getFullYear();
   $: pageUrl = encodeURIComponent($page.url.href);
 </script>
 
@@ -20,7 +21,7 @@
       <slot />
     </div>
     <div class="px-1 flex justify-between items-center text-stone-400 font-light text-[0.6rem]">
-      <span>&copy; 2022, flux.ci</span>
+      <span>&copy; {year}, flux.ci</span>
       <div class="flex gap-2 underline">
         {#if showHelp}
           <a href="/help?back={pageUrl}">What's this?</a>
