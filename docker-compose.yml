@@ -6,6 +6,8 @@ services:
 
   backend:
     image: flux-web-auth-backend:next
+    env_file:
+      - backend.env
 
   envoy:
     image: envoyproxy/envoy-distroless:v1.22-latest
