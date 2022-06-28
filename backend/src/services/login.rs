@@ -24,7 +24,7 @@ impl login_service_server::LoginService for LoginService {
         println!("got initiate: {:?}", metadata);
 
         let response = InitiateResponse {
-            response: match initiate_process(request).await {
+            response: match initiate_process(request) {
                 Ok(result) => Some(initiate_response::Response::Result(InitiateResult {
                     result: Some(result),
                 })),
@@ -69,13 +69,15 @@ impl login_service_server::LoginService for LoginService {
     }
 }
 
-async fn initiate_process(
-    request: Request<InitiateRequest>,
-) -> Result<initiate_result::Result, Error> {
-    let token = crate::utils::get_token(&request);
+fn initiate_process(request: Request<InitiateRequest>) -> Result<initiate_result::Result, Error> {
+    let token = match crate::utils::get_token(&request) {
+        Some(token) => Some(token.to_string()),
+        None => None,
+    };
 
-    // Validate redirect urls
     let request_data = request.into_inner();
+
+    // Get data
     let continue_url = request_data.continue_url;
     let back_url = {
         if request_data.back_url == "" {
@@ -85,17 +87,19 @@ async fn initiate_process(
         }
     };
 
+    // Validate redirect urls
     validate_redirect_url(&continue_url)?;
     if let Some(back_url) = back_url {
         validate_redirect_url(&back_url)?;
     }
 
-    // Has session?
-    if token.is_some() {
-        return Ok(initiate_result::Result::RedirectUrl(continue_url));
+    // Has token
+    if let Some(_token) = token {
+        // FIXME: Verify session
+        Ok(initiate_result::Result::RedirectUrl(continue_url))
+    } else {
+        Ok(initiate_result::Result::Data(InitiateData {
+            next_service_name: "fluxauth".into(),
+        }))
     }
-
-    Ok(initiate_result::Result::Data(InitiateData {
-        next_service_name: "fluxauth".into(),
-    }))
 }
