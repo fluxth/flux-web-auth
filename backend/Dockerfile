@@ -1,5 +1,5 @@
 # Dockerfile context should be in the project root!
-FROM ghcr.io/fluxth/rust-musl-builder:1.61.0 AS rust-build
+FROM ghcr.io/fluxth/rust-musl-builder:1.62.0 AS rust-build
 
 RUN rustup target add x86_64-unknown-linux-musl
 
