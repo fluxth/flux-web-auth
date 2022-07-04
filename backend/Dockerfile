@@ -14,7 +14,8 @@ COPY backend/Cargo.toml .
 COPY backend/Cargo.lock .
 RUN echo 'fn main() {}' > dummy.rs
 RUN sed -i 's#src/main.rs#dummy.rs#' Cargo.toml
-RUN cargo build --release --locked --target x86_64-unknown-linux-musl
+RUN cargo build --release --locked --target x86_64-unknown-linux-musl && \
+    rm dummy.rs
 
 COPY backend/build.rs .
 COPY backend .
